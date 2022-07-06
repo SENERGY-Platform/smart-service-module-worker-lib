@@ -110,6 +110,14 @@ func (this *Camunda) executeNextTasks() (wait bool) {
 				if err != nil {
 					log.Println("ERROR", err)
 					debug.PrintStack()
+					this.handler.Undo(modules, err)
+					repoErr := this.smartServiceRepo.SendWorkerError(task, err)
+					if repoErr == nil {
+						//error is sent --> no more retries
+						//if it is a problem with the process we don't want any retries
+						//if it is a problem with the process-engine, the stop won't be successful and a future try may succeed
+						_ = this.stopProcessInstance(task.ProcessInstanceId)
+					}
 				}
 			}
 		}
@@ -171,11 +179,12 @@ func (this *Camunda) completeTask(taskId string, outputs map[string]interface{})
 
 	if resp.StatusCode >= 300 {
 		temp, _ := io.ReadAll(resp.Body)
-		log.Println("WARNING: unable to complete task:", resp.StatusCode, string(temp))
+		log.Println("ERROR: unable to complete task:", resp.StatusCode, string(temp))
+		return fmt.Errorf("unable to complete task: %v, %v", resp.StatusCode, string(temp))
 	} else {
 		log.Println("complete camunda task: ", completeRequest, string(pl))
 	}
-	return
+	return nil
 }
 
 func (this *Camunda) stopProcessInstance(id string) (err error) {
