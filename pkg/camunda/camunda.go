@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -178,9 +177,8 @@ func (this *Camunda) completeTask(taskId string, outputs map[string]interface{})
 	}
 
 	if resp.StatusCode >= 300 {
-		temp, _ := io.ReadAll(resp.Body)
-		log.Println("ERROR: unable to complete task:", resp.StatusCode, string(temp))
-		return fmt.Errorf("unable to complete task: %v, %v", resp.StatusCode, string(temp))
+		log.Println("ERROR: unable to complete task:", resp.StatusCode, string(pl))
+		return fmt.Errorf("unable to complete task: %v, %v", resp.StatusCode, string(pl))
 	} else {
 		log.Println("complete camunda task: ", completeRequest, string(pl))
 	}
