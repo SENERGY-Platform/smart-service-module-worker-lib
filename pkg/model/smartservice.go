@@ -39,9 +39,47 @@ type SmartServiceModuleInit struct {
 	DeleteInfo *ModuleDeleteInfo      `json:"delete_info" bson:"delete_info"`
 	ModuleType string                 `json:"module_type" bson:"module_type"` //"process-deployment" | "analytics" ...
 	ModuleData map[string]interface{} `json:"module_data" bson:"module_data"`
+	Keys       []string               `json:"keys" bson:"keys"`
 }
 
 type ModuleDeleteInfo struct {
 	Url    string `json:"url" bson:"url"` //url receives a DELETE request and responds with a status code < 300 || code == 404 if ok
 	UserId string `json:"user_id" bson:"user_id"`
+}
+
+type SmartServiceInstance struct {
+	SmartServiceInstanceInit `bson:",inline"`
+	Id                       string   `json:"id" bson:"id"`
+	UserId                   string   `json:"user_id" bson:"user_id"`
+	DesignId                 string   `json:"design_id" bson:"design_id"`
+	ReleaseId                string   `json:"release_id" bson:"release_id"`
+	NewReleaseId             string   `json:"new_release_id,omitempty"`
+	RunningMaintenanceIds    []string `json:"running_maintenance_ids,omitempty"`
+	Ready                    bool     `json:"ready" bson:"ready"`
+	Deleting                 bool     `json:"deleting,omitempty" bson:"deleting"`
+	Error                    string   `json:"error,omitempty" bson:"error"` //is set if module-worker notifies the repository about a error
+	CreatedAt                int64    `json:"created_at" bson:"created_at"` //unix timestamp, set by service on creation
+	UpdatedAt                int64    `json:"updated_at" bson:"updated_at"` //unix timestamp, set by service on creation
+}
+
+type SmartServiceInstanceInit struct {
+	SmartServiceInstanceInfo `bson:",inline"`
+	Parameters               []SmartServiceParameter `json:"parameters" bson:"parameters"`
+}
+
+type SmartServiceInstanceInfo struct {
+	Name        string `json:"name" bson:"name"`
+	Description string `json:"description" bson:"description"`
+}
+
+type SmartServiceParameter struct {
+	Id         string      `json:"id"`
+	Value      interface{} `json:"value"`
+	Label      string      `json:"label"`
+	ValueLabel string      `json:"value_label,omitempty"`
+}
+
+type ModulQuery struct {
+	KeyFilter  *string
+	TypeFilter *string
 }

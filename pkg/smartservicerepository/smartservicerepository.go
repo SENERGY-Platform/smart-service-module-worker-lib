@@ -23,9 +23,14 @@ import (
 
 type SmartServiceRepository struct {
 	config configuration.Config
-	auth   *auth.Auth
+	auth   Auth
 }
 
-func New(config configuration.Config, auth *auth.Auth) *SmartServiceRepository {
+type Auth interface {
+	Ensure() (token auth.Token, err error)
+	ExchangeUserToken(userid string) (token auth.Token, err error)
+}
+
+func New(config configuration.Config, auth Auth) *SmartServiceRepository {
 	return &SmartServiceRepository{config: config, auth: auth}
 }

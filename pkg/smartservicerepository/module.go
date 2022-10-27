@@ -99,3 +99,40 @@ func (this *SmartServiceRepository) UseModuleDeleteInfo(info model.ModuleDeleteI
 	_, _ = io.ReadAll(resp.Body)
 	return nil
 }
+
+func (this *SmartServiceRepository) ListExistingModules(processInstanceId string, query model.ModulQuery) (result []model.SmartServiceModule, err error) {
+	queryValues := url.Values{}
+	if query.KeyFilter != nil {
+		queryValues.Set("key", *query.KeyFilter)
+	}
+	if query.TypeFilter != nil {
+		queryValues.Set("module_type", *query.TypeFilter)
+	}
+	queryStr := ""
+	if len(queryValues) > 0 {
+		queryStr = "?" + queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processInstanceId)+"/modules"+queryStr, nil)
+	if err != nil {
+		return result, err
+	}
+	token, err := this.auth.Ensure()
+	req.Header.Set("Authorization", token.Jwt())
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return result, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		temp, _ := io.ReadAll(resp.Body)
+		err = errors.New(string(temp))
+		return result, err
+	}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
