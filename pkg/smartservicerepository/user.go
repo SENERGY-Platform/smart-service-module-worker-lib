@@ -30,6 +30,9 @@ func (this *SmartServiceRepository) GetInstanceUser(instanceId string) (userId s
 		return userId, err
 	}
 	token, err := this.auth.Ensure()
+	if err != nil {
+		return userId, err
+	}
 	req.Header.Set("Authorization", token.Jwt())
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)

@@ -41,6 +41,9 @@ func (this *SmartServiceRepository) SendWorkerError(task model.CamundaExternalTa
 		return err
 	}
 	token, err := this.auth.Ensure()
+	if err != nil {
+		return err
+	}
 	req.Header.Set("Authorization", token.Jwt())
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
