@@ -125,7 +125,6 @@ func (this *SmartServiceRepository) ListExistingModules(processInstanceId string
 		return result, err
 	}
 	req.Header.Set("Authorization", token.Jwt())
-	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return result, err
@@ -141,4 +140,31 @@ func (this *SmartServiceRepository) ListExistingModules(processInstanceId string
 		return result, err
 	}
 	return result, nil
+}
+
+func (this *SmartServiceRepository) GetModule(userId string, moduleId string) (result model.SmartServiceModule, err error, code int) {
+	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/modules/"+url.PathEscape(moduleId), nil)
+	if err != nil {
+		return result, err, http.StatusInternalServerError
+	}
+	token, err := this.auth.ExchangeUserToken(userId)
+	if err != nil {
+		return result, err, http.StatusInternalServerError
+	}
+	req.Header.Set("Authorization", token.Jwt())
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return result, err, http.StatusInternalServerError
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		temp, _ := io.ReadAll(resp.Body)
+		err = errors.New(string(temp))
+		return result, err, resp.StatusCode
+	}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return result, err, resp.StatusCode
+	}
+	return result, nil, resp.StatusCode
 }
