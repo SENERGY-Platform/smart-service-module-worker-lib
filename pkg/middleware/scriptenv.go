@@ -63,9 +63,9 @@ func (this *ScriptEnv) GetUpdatedVariables() map[string]interface{} {
 
 func (this *ScriptEnv) GetEnvironment() map[string]interface{} {
 	return map[string]interface{}{
-		"io":      NewIoScriptEnv(this),
-		"inputs":  NewInputsScriptEnv(this),
-		"outputs": NewOutputsScriptEnv(this),
+		"variables": NewVariablesScriptEnv(this),
+		"inputs":    NewInputsScriptEnv(this),
+		"outputs":   NewOutputsScriptEnv(this),
 	}
 }
 

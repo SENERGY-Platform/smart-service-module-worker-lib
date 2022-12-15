@@ -135,20 +135,20 @@ func TestMiddlewareScripts(t *testing.T) {
 			"inp1": {Value: "42"},
 			"inp2": {Value: 43},
 			"prescript_1": {Value: `
-					io.store("toBeUpdatesInPre", io.read("toBeUpdatesInPre") + 1);
-					io.store('added', 'foo'); //use single quote
+					variables.write("toBeUpdatesInPre", variables.read("toBeUpdatesInPre") + 1);
+					variables.write('added', 'foo'); //use single quote
 					outputs.set("overwriting", 1);
 					outputs.set("input_v1", inputs.get("inp1"));
 			`},
 			"prescript_2": {Value: `
-					io.store("toBeUpdatesInPreAndPost", io.read("toBeUpdatesInPreAndPost") + 1);
-					io.store("addedJson", JSON.stringify("foo"));
-					io.store("long_result", "a long text");
-					outputs.set("long_result_output", io.ref("long_result"));
+					variables.write("toBeUpdatesInPreAndPost", variables.read("toBeUpdatesInPreAndPost") + 1);
+					variables.write("addedJson", JSON.stringify("foo"));
+					variables.write("long_result", "a long text");
+					outputs.set("long_result_output", variables.ref("long_result"));
 			`},
 			"postscript": {Value: `
-					io.store("toBeUpdatesInPreAndPost", io.read("toBeUpdatesInPreAndPost") + 1);
-					io.store("toBeUpdatesInPost", io.read("toBeUpdatesInPost") + 1);
+					variables.write("toBeUpdatesInPreAndPost", variables.read("toBeUpdatesInPreAndPost") + 1);
+					variables.write("toBeUpdatesInPost", variables.read("toBeUpdatesInPost") + 1);
 					outputs.setJson("input_list", inputs.list());
 					outputs.setJson("input_listNames", inputs.listNames());
 					outputs.set("overwritten", 3);

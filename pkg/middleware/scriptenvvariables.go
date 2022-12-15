@@ -18,16 +18,16 @@ package middleware
 
 import "strings"
 
-type ScriptEnvIo struct {
+type ScriptEnvVariables struct {
 	env *ScriptEnv
 }
 
-func NewIoScriptEnv(env *ScriptEnv) *ScriptEnvIo {
-	return &ScriptEnvIo{env: env}
+func NewVariablesScriptEnv(env *ScriptEnv) *ScriptEnvVariables {
+	return &ScriptEnvVariables{env: env}
 }
 
-// Store value as smart-service instance variable
-func (this *ScriptEnvIo) Store(name string, value interface{}) {
+// Write value as smart-service instance variable
+func (this *ScriptEnvVariables) Write(name string, value interface{}) {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -38,7 +38,7 @@ func (this *ScriptEnvIo) Store(name string, value interface{}) {
 }
 
 // Read value of a smart-service instance variable
-func (this *ScriptEnvIo) Read(name string) interface{} {
+func (this *ScriptEnvVariables) Read(name string) interface{} {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -48,7 +48,7 @@ func (this *ScriptEnvIo) Read(name string) interface{} {
 }
 
 // Exists checks if a smart-service instance variable exists
-func (this *ScriptEnvIo) Exists(name string) bool {
+func (this *ScriptEnvVariables) Exists(name string) bool {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -60,7 +60,7 @@ func (this *ScriptEnvIo) Exists(name string) bool {
 
 // Ref creates a reference to a variable (e.g. "my_var_name" --> "{{.my_var_name}}")
 // throws exception if variable is unknown
-func (this *ScriptEnvIo) Ref(name string) string {
+func (this *ScriptEnvVariables) Ref(name string) string {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -76,7 +76,7 @@ func (this *ScriptEnvIo) Ref(name string) string {
 var TrowErrorForUnknownDerefName = false
 
 // DerefName returns the name of a smart-service instance variable referenced in parameter ref
-func (this *ScriptEnvIo) DerefName(ref string) string {
+func (this *ScriptEnvVariables) DerefName(ref string) string {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -99,7 +99,7 @@ func (this *ScriptEnvIo) DerefName(ref string) string {
 }
 
 // DerefValue returns the value of a smart-service instance variable referenced in parameter ref
-func (this *ScriptEnvIo) DerefValue(ref string) interface{} {
+func (this *ScriptEnvVariables) DerefValue(ref string) interface{} {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -108,7 +108,8 @@ func (this *ScriptEnvIo) DerefValue(ref string) interface{} {
 	return this.env.Variables[this.DerefName(ref)]
 }
 
-func (this *ScriptEnvIo) DerefTemplate(templ string) string {
+// DerefTemplate replaces variable references in the input string with the corresponding variable values
+func (this *ScriptEnvVariables) DerefTemplate(templ string) string {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
