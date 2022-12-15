@@ -16,6 +16,8 @@
 
 package middleware
 
+import "sort"
+
 type ScriptEnvInputs struct {
 	env *ScriptEnv
 }
@@ -45,7 +47,7 @@ func (this *ScriptEnvInputs) Exists(name string) bool {
 	return exists
 }
 
-// List input values
+// List input values sorted by their names
 func (this *ScriptEnvInputs) List() []interface{} {
 	defer func() {
 		if caught := recover(); caught != nil {
@@ -53,13 +55,13 @@ func (this *ScriptEnvInputs) List() []interface{} {
 		}
 	}()
 	result := []interface{}{}
-	for _, value := range this.env.Inputs {
-		result = append(result, value)
+	for _, name := range this.ListNames() {
+		result = append(result, this.Get(name))
 	}
 	return result
 }
 
-// ListNames lists input names
+// ListNames lists sorted input names
 func (this *ScriptEnvInputs) ListNames() []string {
 	defer func() {
 		if caught := recover(); caught != nil {
@@ -70,5 +72,6 @@ func (this *ScriptEnvInputs) ListNames() []string {
 	for name, _ := range this.env.Inputs {
 		result = append(result, name)
 	}
+	sort.Strings(result)
 	return result
 }

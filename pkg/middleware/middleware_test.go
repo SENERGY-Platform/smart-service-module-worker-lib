@@ -90,6 +90,91 @@ func TestMiddleware(t *testing.T) {
 	}
 }
 
+func TestMiddlewareScripts(t *testing.T) {
+	handler := &HandlerMock{DoFunc: func(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
+		return []model.Module{}, map[string]interface{}{
+			"bar":         "batz",
+			"overwriting": 2,
+			"overwritten": 2,
+		}, nil
+	}}
+	repo := &VariablesRepoMock{
+		GetVariablesFunc: func(processId string) (result map[string]interface{}, err error) {
+			return map[string]interface{}{
+				"v1": "str",
+				"v2": float64(42),
+				"v3": true,
+				"v4": nil,
+				"v5": map[string]interface{}{
+					"foo":  "bar",
+					"batz": float64(42),
+				},
+				"toBeUpdatesInPre":        1,
+				"toBeUpdatesInPost":       1,
+				"toBeUpdatesInPreAndPost": 1,
+			}, nil
+		},
+		SetVariablesFunc: func(processId string, changes map[string]interface{}) (err error) {
+			if !reflect.DeepEqual(changes, map[string]interface{}{
+				"toBeUpdatesInPre":        int64(2),
+				"toBeUpdatesInPost":       int64(2),
+				"toBeUpdatesInPreAndPost": int64(3),
+				"added":                   "foo",
+				"addedJson":               `"foo"`,
+				"long_result":             "a long text",
+			}) {
+				t.Errorf("%#v", changes)
+			}
+			return nil
+		},
+	}
+	middleware := New(handler, repo)
+
+	_, outputs, err := middleware.Do(model.CamundaExternalTask{
+		Variables: map[string]model.CamundaVariable{
+			"inp1": {Value: "42"},
+			"inp2": {Value: 43},
+			"prescript_1": {Value: `
+					io.store("toBeUpdatesInPre", io.read("toBeUpdatesInPre") + 1);
+					io.store('added', 'foo'); //use single quote
+					outputs.set("overwriting", 1);
+					outputs.set("input_v1", inputs.get("inp1"));
+			`},
+			"prescript_2": {Value: `
+					io.store("toBeUpdatesInPreAndPost", io.read("toBeUpdatesInPreAndPost") + 1);
+					io.store("addedJson", JSON.stringify("foo"));
+					io.store("long_result", "a long text");
+					outputs.set("long_result_output", io.ref("long_result"));
+			`},
+			"postscript": {Value: `
+					io.store("toBeUpdatesInPreAndPost", io.read("toBeUpdatesInPreAndPost") + 1);
+					io.store("toBeUpdatesInPost", io.read("toBeUpdatesInPost") + 1);
+					outputs.setJson("input_list", inputs.list());
+					outputs.setJson("input_listNames", inputs.listNames());
+					outputs.set("overwritten", 3);
+			`},
+		},
+	})
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	expectedOutput := map[string]interface{}{
+		"bar":                "batz",
+		"overwriting":        2,
+		"overwritten":        int64(3),
+		"input_v1":           "42",
+		"input_list":         `["42",43]`,
+		"input_listNames":    `["inp1","inp2"]`,
+		"long_result_output": "{{.long_result}}",
+	}
+
+	if !reflect.DeepEqual(outputs, expectedOutput) {
+		t.Errorf("\n%#v\n%#v", outputs, expectedOutput)
+	}
+}
+
 type HandlerMock struct {
 	DoFunc func(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error)
 }
@@ -105,9 +190,13 @@ func (this *HandlerMock) Undo(modules []model.Module, reason error) {}
 
 type VariablesRepoMock struct {
 	GetVariablesFunc func(processId string) (result map[string]interface{}, err error)
+	SetVariablesFunc func(processId string, changes map[string]interface{}) (err error)
 }
 
 func (this *VariablesRepoMock) SetVariables(processId string, changes map[string]interface{}) error {
+	if this.SetVariablesFunc != nil {
+		return this.SetVariablesFunc(processId, changes)
+	}
 	return nil
 }
 

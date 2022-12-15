@@ -18,6 +18,7 @@ package middleware
 
 import (
 	"github.com/dop251/goja"
+	"strings"
 )
 
 func NewScriptEnv(variables map[string]interface{}, inputs map[string]interface{}) *ScriptEnv {
@@ -25,9 +26,19 @@ func NewScriptEnv(variables map[string]interface{}, inputs map[string]interface{
 		vm:               nil,
 		Variables:        variables,
 		VariablesUpdates: map[string]interface{}{},
-		Inputs:           inputs,
+		Inputs:           RemoveScriptInputs(inputs),
 		Outputs:          map[string]interface{}{},
 	}
+}
+
+func RemoveScriptInputs(inputs map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+	for name, value := range inputs {
+		if !strings.HasPrefix(name, PostScriptPrefix) && !strings.HasPrefix(name, PreScriptPrefix) {
+			result[name] = value
+		}
+	}
+	return result
 }
 
 type ScriptEnv struct {

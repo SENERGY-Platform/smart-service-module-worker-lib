@@ -88,12 +88,16 @@ func (this *Middleware) Undo(modules []model.Module, reason error) {
 	this.handler.Undo(modules, reason)
 }
 
+const PreScriptPrefix = "prescript"
+
 func (this *Middleware) RunPreScripts(inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts("prescript", inputs, variables)
+	return this.RunScripts(PreScriptPrefix, inputs, variables)
 }
 
+const PostScriptPrefix = "postscript"
+
 func (this *Middleware) RunPostScripts(inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts("postscript", inputs, variables)
+	return this.RunScripts(PostScriptPrefix, inputs, variables)
 }
 
 type KeyValue struct {
