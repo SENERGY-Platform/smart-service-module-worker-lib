@@ -21,6 +21,7 @@ import (
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/smartservicerepository"
 	"sync"
 )
@@ -34,6 +35,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config,
 	if err != nil {
 		return err
 	}
-	camunda.Start(ctx, wg, config, smartServiceRepo, handler)
+	m := middleware.New(handler, smartServiceRepo)
+	camunda.Start(ctx, wg, config, smartServiceRepo, m)
 	return nil
 }
