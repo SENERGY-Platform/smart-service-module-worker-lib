@@ -106,24 +106,28 @@ type KeyValue struct {
 }
 
 func (this *Middleware) RunScripts(prefix string, inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	scripts := []KeyValue{}
+	scriptsKv := []KeyValue{}
 	for name, value := range inputs {
 		if str, ok := value.(string); ok && strings.HasPrefix(name, prefix) {
-			scripts = append(scripts, KeyValue{
+			scriptsKv = append(scriptsKv, KeyValue{
 				Key:   name,
 				Value: str,
 			})
 		}
 	}
-	sort.Slice(scripts, func(i, j int) bool {
-		return scripts[i].Key < scripts[j].Key
+	sort.Slice(scriptsKv, func(i, j int) bool {
+		return scriptsKv[i].Key < scriptsKv[j].Key
 	})
+
+	scripts := []string{}
+	for _, script := range scriptsKv {
+		scripts = append(scripts, script.Value)
+	}
+	script := strings.Join(scripts, "\n")
 	scriptEnv := NewScriptEnv(variables, inputs)
-	for _, script := range scripts {
-		err = runScript(script.Value, scriptEnv)
-		if err != nil {
-			return variableChanges, outputs, err
-		}
+	err = runScript(script, scriptEnv)
+	if err != nil {
+		return variableChanges, outputs, err
 	}
 	return scriptEnv.GetUpdatedVariables(), scriptEnv.GetOutputs(), nil
 }
