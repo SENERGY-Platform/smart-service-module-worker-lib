@@ -107,6 +107,10 @@ type VariablesRepoMock struct {
 	GetVariablesFunc func(processId string) (result map[string]interface{}, err error)
 }
 
+func (this *VariablesRepoMock) SetVariables(processId string, changes map[string]interface{}) error {
+	return nil
+}
+
 func (this *VariablesRepoMock) GetVariables(processId string) (result map[string]interface{}, err error) {
 	if this.GetVariablesFunc == nil {
 		return result, errors.New("missing mock GetVariablesFunc")

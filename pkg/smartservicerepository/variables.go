@@ -17,11 +17,14 @@
 package smartservicerepository
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"runtime/debug"
 )
 
 func (this *SmartServiceRepository) GetVariables(processId string) (result map[string]interface{}, err error) {
@@ -50,4 +53,35 @@ func (this *SmartServiceRepository) GetVariables(processId string) (result map[s
 		return result, err
 	}
 	return result, nil
+}
+
+func (this *SmartServiceRepository) SetVariables(processId string, variableChanges map[string]interface{}) (err error) {
+	body := new(bytes.Buffer)
+	err = json.NewEncoder(body).Encode(variableChanges)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return err
+	}
+	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processId)+"/variables-map", body)
+	if err != nil {
+		return err
+	}
+	token, err := this.auth.Ensure()
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", token.Jwt())
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		temp, _ := io.ReadAll(resp.Body)
+		err = errors.New(string(temp))
+		return err
+	}
+	return nil
 }
