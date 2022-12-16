@@ -77,9 +77,11 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	for key, value := range postOutputs {
 		outputs[key] = value
 	}
-	err = this.repo.SetVariables(task.ProcessInstanceId, variableChanges)
-	if err != nil {
-		return modules, outputs, err
+	if len(variableChanges) > 0 {
+		err = this.repo.SetVariables(task.ProcessInstanceId, variableChanges)
+		if err != nil {
+			return modules, outputs, err
+		}
 	}
 	return modules, outputs, nil
 }
