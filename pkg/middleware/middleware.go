@@ -67,7 +67,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	for key, value := range handlerOutputs {
 		outputs[key] = value
 	}
-	postVarChanges, postOutputs, err := this.RunPostScripts(inputs, variables)
+	postVarChanges, postOutputs, err := this.RunPostScripts(inputs, outputs, variables)
 	if err != nil {
 		return modules, handlerOutputs, err
 	}
@@ -93,13 +93,13 @@ func (this *Middleware) Undo(modules []model.Module, reason error) {
 const PreScriptPrefix = "prescript"
 
 func (this *Middleware) RunPreScripts(inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts(PreScriptPrefix, inputs, variables)
+	return this.RunScripts(PreScriptPrefix, inputs, nil, variables)
 }
 
 const PostScriptPrefix = "postscript"
 
-func (this *Middleware) RunPostScripts(inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts(PostScriptPrefix, inputs, variables)
+func (this *Middleware) RunPostScripts(inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+	return this.RunScripts(PostScriptPrefix, inputs, existingOutputs, variables)
 }
 
 type KeyValue struct {
@@ -107,7 +107,7 @@ type KeyValue struct {
 	Value string
 }
 
-func (this *Middleware) RunScripts(prefix string, inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+func (this *Middleware) RunScripts(prefix string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
 	scriptsKv := []KeyValue{}
 	for name, value := range inputs {
 		if str, ok := value.(string); ok && strings.HasPrefix(name, prefix) {
@@ -126,7 +126,7 @@ func (this *Middleware) RunScripts(prefix string, inputs map[string]interface{},
 		scripts = append(scripts, script.Value)
 	}
 	script := strings.Join(scripts, "\n")
-	scriptEnv := NewScriptEnv(variables, inputs)
+	scriptEnv := NewScriptEnvWithOutputs(variables, inputs, existingOutputs)
 	err = runScript(script, scriptEnv)
 	if err != nil {
 		return variableChanges, outputs, err

@@ -152,6 +152,7 @@ func TestMiddlewareScripts(t *testing.T) {
 					outputs.setJson("input_list", inputs.list());
 					outputs.setJson("input_listNames", inputs.listNames());
 					outputs.set("overwritten", 3);
+					outputs.set("outputsGet", outputs.get("bar")+"_read");
 			`},
 		},
 	})
@@ -168,6 +169,7 @@ func TestMiddlewareScripts(t *testing.T) {
 		"input_list":         `["42",43]`,
 		"input_listNames":    `["inp1","inp2"]`,
 		"long_result_output": "{{.long_result}}",
+		"outputsGet":         "batz_read",
 	}
 
 	if !reflect.DeepEqual(outputs, expectedOutput) {

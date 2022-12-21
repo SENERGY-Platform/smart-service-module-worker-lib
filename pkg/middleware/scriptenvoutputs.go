@@ -36,6 +36,16 @@ func (this *ScriptEnvOutputs) Set(name string, value interface{}) {
 	this.env.Outputs[name] = value
 }
 
+// Get a process worker output
+func (this *ScriptEnvOutputs) Get(name string) interface{} {
+	defer func() {
+		if caught := recover(); caught != nil {
+			panic(this.env.GetVm().ToValue(caught))
+		}
+	}()
+	return this.env.Outputs[name]
+}
+
 // SetJson marshals the given value to json and sets it as a process worker output
 func (this *ScriptEnvOutputs) SetJson(name string, value interface{}) {
 	defer func() {

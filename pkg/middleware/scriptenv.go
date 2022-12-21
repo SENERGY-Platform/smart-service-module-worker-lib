@@ -22,13 +22,21 @@ import (
 )
 
 func NewScriptEnv(variables map[string]interface{}, inputs map[string]interface{}) *ScriptEnv {
-	return &ScriptEnv{
+	return NewScriptEnvWithOutputs(variables, inputs, map[string]interface{}{})
+}
+
+func NewScriptEnvWithOutputs(variables map[string]interface{}, inputs map[string]interface{}, outputs map[string]interface{}) *ScriptEnv {
+	result := &ScriptEnv{
 		vm:               nil,
 		Variables:        variables,
 		VariablesUpdates: map[string]interface{}{},
 		Inputs:           RemoveScriptInputs(inputs),
-		Outputs:          map[string]interface{}{},
+		Outputs:          outputs,
 	}
+	if result.Outputs == nil {
+		result.Outputs = map[string]interface{}{}
+	}
+	return result
 }
 
 func RemoveScriptInputs(inputs map[string]interface{}) map[string]interface{} {
