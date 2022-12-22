@@ -19,6 +19,8 @@ package middleware
 import (
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
+	"log"
+	"runtime/debug"
 	"sort"
 	"strings"
 )
@@ -43,6 +45,8 @@ type VariablesRepo interface {
 func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
 	variables, err := this.repo.GetVariables(task.ProcessInstanceId)
 	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
 		return modules, outputs, err
 	}
 	inputs := map[string]interface{}{}
@@ -51,6 +55,8 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	variableChanges, outputs, err := this.RunPreScripts(inputs, variables)
 	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
 		return modules, outputs, err
 	}
 	for key, value := range variableChanges {
@@ -58,10 +64,14 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	task.Variables, err = this.handleReferences(task.Variables, variables)
 	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
 		return modules, outputs, err
 	}
 	modules, handlerOutputs, err := this.handler.Do(task)
 	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
 		return modules, handlerOutputs, err
 	}
 	for key, value := range handlerOutputs {
@@ -69,6 +79,8 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	postVarChanges, postOutputs, err := this.RunPostScripts(inputs, outputs, variables)
 	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
 		return modules, handlerOutputs, err
 	}
 	for key, value := range postVarChanges {
@@ -80,6 +92,8 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	if len(variableChanges) > 0 {
 		err = this.repo.SetVariables(task.ProcessInstanceId, variableChanges)
 		if err != nil {
+			log.Println("ERROR:", err)
+			debug.PrintStack()
 			return modules, outputs, err
 		}
 	}
