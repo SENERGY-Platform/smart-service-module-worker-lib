@@ -138,9 +138,8 @@ func TestMiddlewareScripts(t *testing.T) {
 					variables.write("toBeUpdatesInPre", variables.read("toBeUpdatesInPre") + 1);
 					variables.write('added', 'foo'); //use single quote
 					outputs.set("overwriting", 1);
-					outputs.set("input_v1", inputs.get("inp1"));
-			`},
-			"prescript_2": {Value: `
+					outputs.set("inp`},
+			"prescript_2": {Value: `ut_v1", inputs.get("inp1"));
 					variables.write("toBeUpdatesInPreAndPost", variables.read("toBeUpdatesInPreAndPost") + 1);
 					variables.write("addedJson", JSON.stringify("foo"));
 					variables.write("long_result", "a long text");

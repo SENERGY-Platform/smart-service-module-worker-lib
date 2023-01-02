@@ -139,7 +139,7 @@ func (this *Middleware) RunScripts(prefix string, inputs map[string]interface{},
 	for _, script := range scriptsKv {
 		scripts = append(scripts, script.Value)
 	}
-	script := strings.Join(scripts, "\n")
+	script := strings.Join(scripts, "")
 	scriptEnv := NewScriptEnvWithOutputs(variables, inputs, existingOutputs)
 	err = runScript(script, scriptEnv)
 	if err != nil {
