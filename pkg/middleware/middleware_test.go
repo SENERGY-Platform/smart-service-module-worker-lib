@@ -18,6 +18,9 @@ package middleware
 
 import (
 	"errors"
+	"github.com/SENERGY-Platform/device-repository/lib/client"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"reflect"
 	"testing"
@@ -45,7 +48,14 @@ func TestMiddleware(t *testing.T) {
 			},
 		}, nil
 	}}
-	middleware := New(handler, repo)
+
+	testIotClient, _, _, err := client.NewTestClient()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	middleware := New(handler, repo, AuthMock("test-token"), testIotClient)
 
 	_, outputs, err := middleware.Do(model.CamundaExternalTask{
 		Variables: map[string]model.CamundaVariable{
@@ -128,7 +138,13 @@ func TestMiddlewareScripts(t *testing.T) {
 			return nil
 		},
 	}
-	middleware := New(handler, repo)
+	testIotClient, _, _, err := client.NewTestClient()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	middleware := New(handler, repo, auth.New(configuration.Config{}), testIotClient)
 
 	_, outputs, err := middleware.Do(model.CamundaExternalTask{
 		Variables: map[string]model.CamundaVariable{
@@ -194,6 +210,10 @@ type VariablesRepoMock struct {
 	SetVariablesFunc func(processId string, changes map[string]interface{}) (err error)
 }
 
+func (this *VariablesRepoMock) GetInstanceUser(instanceId string) (userId string, err error) {
+	return "user-id", nil
+}
+
 func (this *VariablesRepoMock) SetVariables(processId string, changes map[string]interface{}) error {
 	if this.SetVariablesFunc != nil {
 		return this.SetVariablesFunc(processId, changes)
@@ -206,4 +226,14 @@ func (this *VariablesRepoMock) GetVariables(processId string) (result map[string
 		return result, errors.New("missing mock GetVariablesFunc")
 	}
 	return this.GetVariablesFunc(processId)
+}
+
+type AuthMock string
+
+func (this AuthMock) ExchangeUserToken(userid string) (token auth.Token, err error) {
+	return auth.Token{
+		Token:       string(this),
+		Sub:         "",
+		RealmAccess: nil,
+	}, nil
 }

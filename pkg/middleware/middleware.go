@@ -17,6 +17,8 @@
 package middleware
 
 import (
+	"github.com/SENERGY-Platform/device-repository/lib/client"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"log"
@@ -25,24 +27,39 @@ import (
 	"strings"
 )
 
-func New(handler camunda.Handler, repo VariablesRepo) *Middleware {
+func New(handler camunda.Handler, repo VariablesRepo, auth Auth, iotClient client.Interface) *Middleware {
 	return &Middleware{
-		handler: handler,
-		repo:    repo,
+		handler:   handler,
+		repo:      repo,
+		auth:      auth,
+		iotClient: iotClient,
 	}
 }
 
 type Middleware struct {
-	handler camunda.Handler
-	repo    VariablesRepo
+	handler   camunda.Handler
+	repo      VariablesRepo
+	auth      Auth
+	iotClient client.Interface
+}
+
+type Auth interface {
+	ExchangeUserToken(userid string) (token auth.Token, err error)
 }
 
 type VariablesRepo interface {
 	GetVariables(processId string) (result map[string]interface{}, err error)
 	SetVariables(processId string, changes map[string]interface{}) error
+	GetInstanceUser(instanceId string) (userId string, err error)
 }
 
 func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
+	userId, err := this.repo.GetInstanceUser(task.ProcessInstanceId)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return modules, outputs, err
+	}
 	variables, err := this.repo.GetVariables(task.ProcessInstanceId)
 	if err != nil {
 		log.Println("ERROR:", err)
@@ -53,7 +70,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	for key, value := range task.Variables {
 		inputs[key] = value.Value
 	}
-	variableChanges, outputs, err := this.RunPreScripts(inputs, variables)
+	variableChanges, outputs, err := this.RunPreScripts(userId, inputs, variables)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -77,7 +94,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	for key, value := range handlerOutputs {
 		outputs[key] = value
 	}
-	postVarChanges, postOutputs, err := this.RunPostScripts(inputs, outputs, variables)
+	postVarChanges, postOutputs, err := this.RunPostScripts(userId, inputs, outputs, variables)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -106,14 +123,14 @@ func (this *Middleware) Undo(modules []model.Module, reason error) {
 
 const PreScriptPrefix = "prescript"
 
-func (this *Middleware) RunPreScripts(inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts(PreScriptPrefix, inputs, nil, variables)
+func (this *Middleware) RunPreScripts(userId string, inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+	return this.RunScripts(userId, PreScriptPrefix, inputs, nil, variables)
 }
 
 const PostScriptPrefix = "postscript"
 
-func (this *Middleware) RunPostScripts(inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts(PostScriptPrefix, inputs, existingOutputs, variables)
+func (this *Middleware) RunPostScripts(userId string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+	return this.RunScripts(userId, PostScriptPrefix, inputs, existingOutputs, variables)
 }
 
 type KeyValue struct {
@@ -121,7 +138,7 @@ type KeyValue struct {
 	Value string
 }
 
-func (this *Middleware) RunScripts(prefix string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+func (this *Middleware) RunScripts(userId string, prefix string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
 	scriptsKv := []KeyValue{}
 	for name, value := range inputs {
 		if str, ok := value.(string); ok && strings.HasPrefix(name, prefix) {
@@ -140,7 +157,7 @@ func (this *Middleware) RunScripts(prefix string, inputs map[string]interface{},
 		scripts = append(scripts, script.Value)
 	}
 	script := strings.Join(scripts, "")
-	scriptEnv := NewScriptEnvWithOutputs(variables, inputs, existingOutputs)
+	scriptEnv := NewScriptEnv(this.auth, this.iotClient, userId, variables, inputs, existingOutputs)
 	err = runScript(script, scriptEnv)
 	if err != nil {
 		return variableChanges, outputs, err

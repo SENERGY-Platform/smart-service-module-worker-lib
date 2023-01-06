@@ -27,6 +27,7 @@ import (
 )
 
 type Config struct {
+	DeviceRepositoryUrl                  string `json:"device_repository_url"`
 	SmartServiceRepositoryUrl            string `json:"smart_service_repository_url"`
 	CamundaUrl                           string `json:"camunda_url" config:"secret"`
 	CamundaWorkerId                      string `json:"camunda_worker_id"`
@@ -45,7 +46,7 @@ func LoadLibConfig(location string) (config Config, err error) {
 	return Load[Config](location)
 }
 
-//loads config from json in location and used environment variables (e.g KafkaUrl --> KAFKA_URL)
+// loads config from json in location and used environment variables (e.g KafkaUrl --> KAFKA_URL)
 func Load[T any](location string) (config T, err error) {
 	file, err := os.Open(location)
 	if err != nil {

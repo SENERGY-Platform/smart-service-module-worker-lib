@@ -18,6 +18,7 @@ package pkg
 
 import (
 	"context"
+	"github.com/SENERGY-Platform/device-repository/lib/client"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
@@ -35,7 +36,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config,
 	if err != nil {
 		return err
 	}
-	m := middleware.New(handler, smartServiceRepo)
+	m := middleware.New(handler, smartServiceRepo, auth, client.NewClient(config.DeviceRepositoryUrl))
 	camunda.Start(ctx, wg, config, smartServiceRepo, m)
 	return nil
 }

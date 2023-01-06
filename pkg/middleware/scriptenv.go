@@ -17,21 +17,22 @@
 package middleware
 
 import (
+	"github.com/SENERGY-Platform/device-repository/lib/client"
 	"github.com/dop251/goja"
 	"strings"
+	"sync"
 )
 
-func NewScriptEnv(variables map[string]interface{}, inputs map[string]interface{}) *ScriptEnv {
-	return NewScriptEnvWithOutputs(variables, inputs, map[string]interface{}{})
-}
-
-func NewScriptEnvWithOutputs(variables map[string]interface{}, inputs map[string]interface{}, outputs map[string]interface{}) *ScriptEnv {
+func NewScriptEnv(auth Auth, iotClient client.Interface, userId string, variables map[string]interface{}, inputs map[string]interface{}, outputs map[string]interface{}) *ScriptEnv {
 	result := &ScriptEnv{
 		vm:               nil,
 		Variables:        variables,
 		VariablesUpdates: map[string]interface{}{},
 		Inputs:           RemoveScriptInputs(inputs),
 		Outputs:          outputs,
+		auth:             auth,
+		iotClient:        iotClient,
+		userId:           userId,
 	}
 	if result.Outputs == nil {
 		result.Outputs = map[string]interface{}{}
@@ -55,6 +56,11 @@ type ScriptEnv struct {
 	VariablesUpdates map[string]interface{}
 	Inputs           map[string]interface{}
 	Outputs          map[string]interface{}
+	auth             Auth
+	iotClient        client.Interface
+	userId           string
+	userToken        string
+	mux              sync.Mutex
 }
 
 func (this *ScriptEnv) RegisterRuntime(runtime *goja.Runtime) {
@@ -74,9 +80,24 @@ func (this *ScriptEnv) GetEnvironment() map[string]interface{} {
 		"variables": NewVariablesScriptEnv(this),
 		"inputs":    NewInputsScriptEnv(this),
 		"outputs":   NewOutputsScriptEnv(this),
+		"iot":       NewIotScriptEnv(this),
 	}
 }
 
 func (this *ScriptEnv) GetVm() *goja.Runtime {
 	return this.vm
+}
+
+func (this *ScriptEnv) getToken() string {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	if this.userToken != "" {
+		return this.userToken
+	}
+	token, err := this.auth.ExchangeUserToken(this.userId)
+	if err != nil {
+		panic(err)
+	}
+	this.userToken = token.Jwt()
+	return this.userToken
 }

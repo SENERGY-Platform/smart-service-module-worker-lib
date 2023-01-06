@@ -17,6 +17,7 @@
 package middleware
 
 import (
+	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/dop251/goja"
 	"reflect"
 	"testing"
@@ -42,6 +43,32 @@ func (this *ScriptContextMock) Store(name string, value interface{}) {
 		}
 	}()
 	this.StoreFunc(name, value)
+}
+
+func (this *ScriptContextMock) GetDevice() models.Device {
+	return models.Device{
+		Id:      "device-id",
+		LocalId: "local-id",
+		Name:    "device-name",
+		Attributes: []models.Attribute{
+			{
+				Key:   "attr-key",
+				Value: "attr-value",
+			},
+		},
+		DeviceTypeId: "dt-id",
+	}
+}
+
+func (this *ScriptContextMock) AssertDeviceName(expectedName string, device models.Device) {
+	defer func() {
+		if caught := recover(); caught != nil {
+			panic(this.vm.ToValue(caught))
+		}
+	}()
+	if device.Name != expectedName {
+		panic("expectedName != device.Name")
+	}
 }
 
 func TestRunScript(t *testing.T) {
@@ -85,6 +112,19 @@ func TestRunScript(t *testing.T) {
 }`, &ScriptContextMock{StoreFunc: func(name string, value interface{}) {
 			panic("my error")
 		}})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})
+
+	t.Run("complex parameters", func(t *testing.T) {
+		err := runScript(`
+var goDevice = io.getDevice();
+var scriptDevice = {id: "device-id", name: "device-name"};
+io.assertDeviceName("device-name", scriptDevice);
+io.assertDeviceName(goDevice.name, scriptDevice);
+`, &ScriptContextMock{StoreFunc: func(name string, value interface{}) {}})
 		if err != nil {
 			t.Error(err)
 			return
