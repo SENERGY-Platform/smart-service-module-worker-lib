@@ -6,6 +6,8 @@ github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEV
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
 github.com/SENERGY-Platform/device-repository v0.0.0-20230106111134-f025951c9d1a h1:5u2flcfO38zPbNFaCodfm9viFFRCoPyO5veNSceImJs=
 github.com/SENERGY-Platform/device-repository v0.0.0-20230106111134-f025951c9d1a/go.mod h1:4kjvGNN4oOWacRJ7Dftw98+/rscSIyk/gTF/MEcLrk0=
+github.com/SENERGY-Platform/device-repository v0.0.0-20230109071552-1ba9032e599d h1:gbB2fNcoSQpB2Aw5/+6MFxXNIV37RhjparZ/REzahsE=
+github.com/SENERGY-Platform/device-repository v0.0.0-20230109071552-1ba9032e599d/go.mod h1:4kjvGNN4oOWacRJ7Dftw98+/rscSIyk/gTF/MEcLrk0=
 github.com/SENERGY-Platform/models/go v0.0.0-20221223081229-be7eb5ebb37f h1:nq+SurPs/4hheF2ftRm0VuV2FRa1buxv6LakesiMXac=
 github.com/SENERGY-Platform/models/go v0.0.0-20221223081229-be7eb5ebb37f/go.mod h1:GqfI+440B0Yz7NshAxm4PgVwRGcNqvbxddoB+xUa6HQ=
 github.com/acobaugh/osrelease v0.0.0-20181218015638-a93a0a55a249 h1:fMi9ZZ/it4orHj3xWrM6cLkVFcCbkXQALFUiNtHtCPs=

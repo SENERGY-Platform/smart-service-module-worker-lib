@@ -3,7 +3,7 @@ module github.com/SENERGY-Platform/smart-service-module-worker-lib
 go 1.18
 
 require (
-	github.com/SENERGY-Platform/device-repository v0.0.0-20230106111134-f025951c9d1a
+	github.com/SENERGY-Platform/device-repository v0.0.0-20230109071552-1ba9032e599d
 	github.com/SENERGY-Platform/models/go v0.0.0-20221223081229-be7eb5ebb37f
 	github.com/coocood/freecache v1.2.1
 	github.com/dop251/goja v0.0.0-20221118162653-d4bf6fde1b86
