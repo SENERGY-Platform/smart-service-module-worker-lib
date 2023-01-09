@@ -18,12 +18,14 @@ package smartservicerepository
 
 import (
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/cache"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 )
 
 type SmartServiceRepository struct {
 	config configuration.Config
 	auth   Auth
+	cache  *cache.Cache
 }
 
 type Auth interface {
@@ -32,5 +34,5 @@ type Auth interface {
 }
 
 func New(config configuration.Config, auth Auth) *SmartServiceRepository {
-	return &SmartServiceRepository{config: config, auth: auth}
+	return &SmartServiceRepository{config: config, auth: auth, cache: cache.NewCache(30)}
 }

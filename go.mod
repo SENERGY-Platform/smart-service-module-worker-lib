@@ -5,9 +5,9 @@ go 1.18
 require (
 	github.com/SENERGY-Platform/device-repository v0.0.0-20230109071552-1ba9032e599d
 	github.com/SENERGY-Platform/models/go v0.0.0-20221223081229-be7eb5ebb37f
-	github.com/coocood/freecache v1.2.1
 	github.com/dop251/goja v0.0.0-20221118162653-d4bf6fde1b86
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 )
 
 require (
@@ -16,7 +16,6 @@ require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/acobaugh/osrelease v0.0.0-20181218015638-a93a0a55a249 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/docker/cli v20.10.7+incompatible // indirect

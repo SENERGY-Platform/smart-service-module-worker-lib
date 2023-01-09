@@ -22,9 +22,17 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 func (this *SmartServiceRepository) GetInstanceUser(instanceId string) (userId string, err error) {
+	err = this.cache.Use("instances-by-process-id/"+instanceId+"/user-id", 10*time.Second, func() (interface{}, error) {
+		return this.getInstanceUser(instanceId)
+	}, &userId)
+	return userId, nil
+}
+
+func (this *SmartServiceRepository) getInstanceUser(instanceId string) (userId string, err error) {
 	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(instanceId)+"/user-id", nil)
 	if err != nil {
 		return userId, err

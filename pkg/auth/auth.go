@@ -17,18 +17,19 @@
 package auth
 
 import (
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/cache"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"time"
 )
 
 type Auth struct {
 	config configuration.Config
-	cache  *Cache
+	cache  *cache.Cache
 	openid *OpenidToken
 }
 
 func New(config configuration.Config) *Auth {
-	return &Auth{config: config, cache: NewCache(config.TokenCacheSizeInMb*MB, config.TokenCacheDefaultExpirationInSeconds)}
+	return &Auth{config: config, cache: cache.NewCache(config.TokenCacheDefaultExpirationInSeconds)}
 }
 
 var TimeNow = func() time.Time {

@@ -39,7 +39,6 @@ type Config struct {
 	AuthClientId                         string `json:"auth_client_id" config:"secret"`
 	AuthClientSecret                     string `json:"auth_client_secret" config:"secret"`
 	TokenCacheDefaultExpirationInSeconds int    `json:"token_cache_default_expiration_in_seconds"`
-	TokenCacheSizeInMb                   int    `json:"token_cache_size_in_mb"`
 }
 
 func LoadLibConfig(location string) (config Config, err error) {

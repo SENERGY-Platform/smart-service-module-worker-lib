@@ -19,7 +19,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -27,13 +27,13 @@ import (
 )
 
 func (this *Auth) ExchangeUserToken(userid string) (token Token, err error) {
-	err = this.cache.UseWithExpirationInResult("user-token."+userid, func() (interface{}, int, error) {
+	err = this.cache.UseWithExpirationInResult("user-token."+userid, func() (interface{}, time.Duration, error) {
 		return this.exchangeUserToken(userid)
 	}, &token)
 	return token, err
 }
 
-func (this *Auth) exchangeUserToken(userid string) (token Token, expiration int, err error) {
+func (this *Auth) exchangeUserToken(userid string) (token Token, expiration time.Duration, err error) {
 	resp, err := http.PostForm(this.config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
 		"client_id":         {this.config.AuthClientId},
 		"client_secret":     {this.config.AuthClientSecret},
@@ -44,7 +44,7 @@ func (this *Auth) exchangeUserToken(userid string) (token Token, expiration int,
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		log.Println("ERROR: GetUserToken()", resp.StatusCode, string(body))
 		err = errors.New("access denied")
 		resp.Body.Close()
@@ -56,7 +56,7 @@ func (this *Auth) exchangeUserToken(userid string) (token Token, expiration int,
 		return
 	}
 	token, err = Parse("Bearer " + openIdToken.AccessToken)
-	return token, int(openIdToken.ExpiresIn) - 5, err // subtract 5 seconds from expiration as a buffer
+	return token, (time.Duration(openIdToken.ExpiresIn - 5)) * time.Second, err // subtract 5 seconds from expiration as a buffer
 }
 
 type OpenidToken struct {
