@@ -21,15 +21,15 @@ import (
 	"github.com/SENERGY-Platform/models/go/models"
 )
 
-type ScriptEnvIot struct {
+type ScriptEnvDeviceRepo struct {
 	env *ScriptEnv
 }
 
-func NewIotScriptEnv(env *ScriptEnv) *ScriptEnvIot {
-	return &ScriptEnvIot{env: env}
+func NewDeviceRepoScriptEnv(env *ScriptEnv) *ScriptEnvDeviceRepo {
+	return &ScriptEnvDeviceRepo{env: env}
 }
 
-func (this *ScriptEnvIot) ReadDevice(id string) models.Device {
+func (this *ScriptEnvDeviceRepo) ReadDevice(id string) models.Device {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -42,7 +42,7 @@ func (this *ScriptEnvIot) ReadDevice(id string) models.Device {
 	return result
 }
 
-func (this *ScriptEnvIot) ReadDeviceByLocalId(localId string) models.Device {
+func (this *ScriptEnvDeviceRepo) ReadDeviceByLocalId(localId string) models.Device {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -55,7 +55,7 @@ func (this *ScriptEnvIot) ReadDeviceByLocalId(localId string) models.Device {
 	return result
 }
 
-func (this *ScriptEnvIot) ReadHub(id string) models.Hub {
+func (this *ScriptEnvDeviceRepo) ReadHub(id string) models.Hub {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -68,7 +68,7 @@ func (this *ScriptEnvIot) ReadHub(id string) models.Hub {
 	return result
 }
 
-func (this *ScriptEnvIot) ListHubDeviceIds(id string, asLocalId bool) []string {
+func (this *ScriptEnvDeviceRepo) ListHubDeviceIds(id string, asLocalId bool) []string {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -81,7 +81,7 @@ func (this *ScriptEnvIot) ListHubDeviceIds(id string, asLocalId bool) []string {
 	return result
 }
 
-func (this *ScriptEnvIot) ReadDeviceType(id string) models.DeviceType {
+func (this *ScriptEnvDeviceRepo) ReadDeviceType(id string) models.DeviceType {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -94,7 +94,7 @@ func (this *ScriptEnvIot) ReadDeviceType(id string) models.DeviceType {
 	return result
 }
 
-func (this *ScriptEnvIot) ListDeviceTypes(limit int64, offset int64, sort string, filter []model.FilterCriteria, includeModified bool, includeUnmodified bool) []models.DeviceType {
+func (this *ScriptEnvDeviceRepo) ListDeviceTypes(limit int64, offset int64, sort string, filter []model.FilterCriteria, includeModified bool, includeUnmodified bool) []models.DeviceType {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -107,7 +107,7 @@ func (this *ScriptEnvIot) ListDeviceTypes(limit int64, offset int64, sort string
 	return result
 }
 
-func (this *ScriptEnvIot) GetDeviceTypeSelectables(query []model.FilterCriteria, pathPrefix string, includeModified bool) []model.DeviceTypeSelectable {
+func (this *ScriptEnvDeviceRepo) GetDeviceTypeSelectables(query []model.FilterCriteria, pathPrefix string, includeModified bool) []model.DeviceTypeSelectable {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -120,7 +120,7 @@ func (this *ScriptEnvIot) GetDeviceTypeSelectables(query []model.FilterCriteria,
 	return result
 }
 
-func (this *ScriptEnvIot) ReadDeviceGroup(id string) models.DeviceGroup {
+func (this *ScriptEnvDeviceRepo) ReadDeviceGroup(id string) models.DeviceGroup {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -133,7 +133,7 @@ func (this *ScriptEnvIot) ReadDeviceGroup(id string) models.DeviceGroup {
 	return result
 }
 
-func (this *ScriptEnvIot) GetService(id string) models.Service {
+func (this *ScriptEnvDeviceRepo) GetService(id string) models.Service {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -146,7 +146,7 @@ func (this *ScriptEnvIot) GetService(id string) models.Service {
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspects() []models.Aspect {
+func (this *ScriptEnvDeviceRepo) GetAspects() []models.Aspect {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -159,7 +159,7 @@ func (this *ScriptEnvIot) GetAspects() []models.Aspect {
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspectsWithMeasuringFunction(ancestors bool, descendants bool) []models.Aspect {
+func (this *ScriptEnvDeviceRepo) GetAspectsWithMeasuringFunction(ancestors bool, descendants bool) []models.Aspect {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -172,7 +172,7 @@ func (this *ScriptEnvIot) GetAspectsWithMeasuringFunction(ancestors bool, descen
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspect(id string) models.Aspect {
+func (this *ScriptEnvDeviceRepo) GetAspect(id string) models.Aspect {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -185,7 +185,7 @@ func (this *ScriptEnvIot) GetAspect(id string) models.Aspect {
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspectNode(id string) models.AspectNode {
+func (this *ScriptEnvDeviceRepo) GetAspectNode(id string) models.AspectNode {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -198,7 +198,7 @@ func (this *ScriptEnvIot) GetAspectNode(id string) models.AspectNode {
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspectNodes() []models.AspectNode {
+func (this *ScriptEnvDeviceRepo) GetAspectNodes() []models.AspectNode {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -211,7 +211,7 @@ func (this *ScriptEnvIot) GetAspectNodes() []models.AspectNode {
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspectNodesMeasuringFunctions(id string, ancestors bool, descendants bool) []models.Function {
+func (this *ScriptEnvDeviceRepo) GetAspectNodesMeasuringFunctions(id string, ancestors bool, descendants bool) []models.Function {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -224,7 +224,7 @@ func (this *ScriptEnvIot) GetAspectNodesMeasuringFunctions(id string, ancestors 
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspectNodesWithMeasuringFunction(ancestors bool, descendants bool) []models.AspectNode {
+func (this *ScriptEnvDeviceRepo) GetAspectNodesWithMeasuringFunction(ancestors bool, descendants bool) []models.AspectNode {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -237,7 +237,7 @@ func (this *ScriptEnvIot) GetAspectNodesWithMeasuringFunction(ancestors bool, de
 	return result
 }
 
-func (this *ScriptEnvIot) GetAspectNodesByIdList(ids []string) []models.AspectNode {
+func (this *ScriptEnvDeviceRepo) GetAspectNodesByIdList(ids []string) []models.AspectNode {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -250,7 +250,7 @@ func (this *ScriptEnvIot) GetAspectNodesByIdList(ids []string) []models.AspectNo
 	return result
 }
 
-func (this *ScriptEnvIot) GetLeafCharacteristics() []models.Characteristic {
+func (this *ScriptEnvDeviceRepo) GetLeafCharacteristics() []models.Characteristic {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -263,7 +263,7 @@ func (this *ScriptEnvIot) GetLeafCharacteristics() []models.Characteristic {
 	return result
 }
 
-func (this *ScriptEnvIot) GetCharacteristic(id string) models.Characteristic {
+func (this *ScriptEnvDeviceRepo) GetCharacteristic(id string) models.Characteristic {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -276,7 +276,7 @@ func (this *ScriptEnvIot) GetCharacteristic(id string) models.Characteristic {
 	return result
 }
 
-func (this *ScriptEnvIot) GetConceptWithCharacteristics(id string) models.ConceptWithCharacteristics {
+func (this *ScriptEnvDeviceRepo) GetConceptWithCharacteristics(id string) models.ConceptWithCharacteristics {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -289,7 +289,7 @@ func (this *ScriptEnvIot) GetConceptWithCharacteristics(id string) models.Concep
 	return result
 }
 
-func (this *ScriptEnvIot) GetConceptWithoutCharacteristics(id string) models.Concept {
+func (this *ScriptEnvDeviceRepo) GetConceptWithoutCharacteristics(id string) models.Concept {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -302,7 +302,7 @@ func (this *ScriptEnvIot) GetConceptWithoutCharacteristics(id string) models.Con
 	return result
 }
 
-func (this *ScriptEnvIot) GetDeviceClasses() []models.DeviceClass {
+func (this *ScriptEnvDeviceRepo) GetDeviceClasses() []models.DeviceClass {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -315,7 +315,7 @@ func (this *ScriptEnvIot) GetDeviceClasses() []models.DeviceClass {
 	return result
 }
 
-func (this *ScriptEnvIot) GetDeviceClassesWithControllingFunctions() []models.DeviceClass {
+func (this *ScriptEnvDeviceRepo) GetDeviceClassesWithControllingFunctions() []models.DeviceClass {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -328,7 +328,7 @@ func (this *ScriptEnvIot) GetDeviceClassesWithControllingFunctions() []models.De
 	return result
 }
 
-func (this *ScriptEnvIot) GetDeviceClassesFunctions(id string) []models.Function {
+func (this *ScriptEnvDeviceRepo) GetDeviceClassesFunctions(id string) []models.Function {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -341,7 +341,7 @@ func (this *ScriptEnvIot) GetDeviceClassesFunctions(id string) []models.Function
 	return result
 }
 
-func (this *ScriptEnvIot) GetDeviceClassesControllingFunctions(id string) []models.Function {
+func (this *ScriptEnvDeviceRepo) GetDeviceClassesControllingFunctions(id string) []models.Function {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -354,7 +354,7 @@ func (this *ScriptEnvIot) GetDeviceClassesControllingFunctions(id string) []mode
 	return result
 }
 
-func (this *ScriptEnvIot) GetDeviceClass(id string) models.DeviceClass {
+func (this *ScriptEnvDeviceRepo) GetDeviceClass(id string) models.DeviceClass {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -367,7 +367,7 @@ func (this *ScriptEnvIot) GetDeviceClass(id string) models.DeviceClass {
 	return result
 }
 
-func (this *ScriptEnvIot) GetFunctionsByType(rdfType string) []models.Function {
+func (this *ScriptEnvDeviceRepo) GetFunctionsByType(rdfType string) []models.Function {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -380,7 +380,7 @@ func (this *ScriptEnvIot) GetFunctionsByType(rdfType string) []models.Function {
 	return result
 }
 
-func (this *ScriptEnvIot) GetFunction(id string) models.Function {
+func (this *ScriptEnvDeviceRepo) GetFunction(id string) models.Function {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
@@ -393,7 +393,7 @@ func (this *ScriptEnvIot) GetFunction(id string) models.Function {
 	return result
 }
 
-func (this *ScriptEnvIot) GetLocation(id string) models.Location {
+func (this *ScriptEnvDeviceRepo) GetLocation(id string) models.Location {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))

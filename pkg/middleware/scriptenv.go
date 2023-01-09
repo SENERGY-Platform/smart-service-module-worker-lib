@@ -77,10 +77,10 @@ func (this *ScriptEnv) GetUpdatedVariables() map[string]interface{} {
 
 func (this *ScriptEnv) GetEnvironment() map[string]interface{} {
 	return map[string]interface{}{
-		"variables": NewVariablesScriptEnv(this),
-		"inputs":    NewInputsScriptEnv(this),
-		"outputs":   NewOutputsScriptEnv(this),
-		"iot":       NewIotScriptEnv(this),
+		"variables":  NewVariablesScriptEnv(this),
+		"inputs":     NewInputsScriptEnv(this),
+		"outputs":    NewOutputsScriptEnv(this),
+		"deviceRepo": NewDeviceRepoScriptEnv(this),
 	}
 }
 
