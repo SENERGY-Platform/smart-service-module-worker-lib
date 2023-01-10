@@ -53,7 +53,7 @@ func GenerateTsAceCodeCompleter(pathToScriptenv string) (string, error) {
 		for _, method := range filterMethods(f, typeName) {
 			templInputs := map[string]interface{}{
 				"prefix":     key,
-				"method":     method.Name.Name,
+				"method":     uncapitalize(method.Name.Name),
 				"inputs":     "",
 				"resultName": nil,
 			}
@@ -122,6 +122,16 @@ func GenerateTsAceCodeCompleter(pathToScriptenv string) (string, error) {
 	builder := strings.Builder{}
 	err = completerTempl.Execute(&builder, completerTemplInputs)
 	return builder.String(), err
+}
+
+func uncapitalize(s string) string {
+	if s == "" {
+		return ""
+	}
+	if len(s) == 1 {
+		return strings.ToLower(s[0:1])
+	}
+	return strings.ToLower(s[0:1]) + s[1:]
 }
 
 func getInputAsNameAndType(param *ast.Field, defaultName string) string {
