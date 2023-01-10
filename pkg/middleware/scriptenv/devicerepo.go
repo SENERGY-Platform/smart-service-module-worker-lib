@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package middleware
+package scriptenv
 
 import (
 	"github.com/SENERGY-Platform/device-repository/lib/model"

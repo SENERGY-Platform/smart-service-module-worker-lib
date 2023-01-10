@@ -1,3 +1,4 @@
 smart-service-module-worker-lib
 .idea/
 *.iml
+ace-code-completer.ts

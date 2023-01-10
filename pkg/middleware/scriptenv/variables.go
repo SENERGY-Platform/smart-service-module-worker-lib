@@ -16,7 +16,10 @@
 
 package scriptenv
 
-import "strings"
+import (
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/references"
+	"strings"
+)
 
 type ScriptEnvVariables struct {
 	env *ScriptEnv
@@ -115,11 +118,11 @@ func (this *ScriptEnvVariables) DerefTemplate(templ string) string {
 			panic(this.env.GetVm().ToValue(caught))
 		}
 	}()
-	placeholder, err := getPlaceholder(this.env.Variables)
+	placeholder, err := references.GetPlaceholder(this.env.Variables)
 	if err != nil {
 		panic(err)
 	}
-	result, err := replaceReferences(templ, placeholder)
+	result, err := references.Replace(templ, placeholder)
 	if err != nil {
 		panic(err)
 	}

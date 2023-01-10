@@ -20,6 +20,8 @@ import (
 	"github.com/SENERGY-Platform/device-repository/lib/client"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/references"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/scriptenv"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"log"
 	"runtime/debug"
@@ -79,7 +81,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	for key, value := range variableChanges {
 		variables[key] = value
 	}
-	task.Variables, err = this.handleReferences(task.Variables, variables)
+	task.Variables, err = references.Handle(task.Variables, variables)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -122,12 +124,11 @@ func (this *Middleware) Undo(modules []model.Module, reason error) {
 }
 
 const PreScriptPrefix = "prescript"
+const PostScriptPrefix = "postscript"
 
 func (this *Middleware) RunPreScripts(userId string, inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
 	return this.RunScripts(userId, PreScriptPrefix, inputs, nil, variables)
 }
-
-const PostScriptPrefix = "postscript"
 
 func (this *Middleware) RunPostScripts(userId string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
 	return this.RunScripts(userId, PostScriptPrefix, inputs, existingOutputs, variables)
@@ -157,7 +158,7 @@ func (this *Middleware) RunScripts(userId string, prefix string, inputs map[stri
 		scripts = append(scripts, script.Value)
 	}
 	script := strings.Join(scripts, "")
-	scriptEnv := NewScriptEnv(this.auth, this.iotClient, userId, variables, inputs, existingOutputs)
+	scriptEnv := scriptenv.NewScriptEnv(this.auth, this.iotClient, userId, variables, inputs, existingOutputs)
 	err = runScript(script, scriptEnv)
 	if err != nil {
 		return variableChanges, outputs, err

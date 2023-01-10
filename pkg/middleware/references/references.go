@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package middleware
+package references
 
 import (
 	"encoding/json"
@@ -23,15 +23,15 @@ import (
 	"text/template"
 )
 
-func (this *Middleware) handleReferences(inputs map[string]model.CamundaVariable, variables map[string]interface{}) (result map[string]model.CamundaVariable, err error) {
+func Handle(inputs map[string]model.CamundaVariable, variables map[string]interface{}) (result map[string]model.CamundaVariable, err error) {
 	result = map[string]model.CamundaVariable{}
-	placeholder, err := getPlaceholder(variables)
+	placeholder, err := GetPlaceholder(variables)
 	if err != nil {
 		return result, err
 	}
 	for key, input := range inputs {
 		if str, ok := input.Value.(string); ok {
-			input.Value, err = replaceReferences(str, placeholder)
+			input.Value, err = Replace(str, placeholder)
 			if err != nil {
 				return result, err
 			}
@@ -41,7 +41,7 @@ func (this *Middleware) handleReferences(inputs map[string]model.CamundaVariable
 	return result, nil
 }
 
-func getPlaceholder(variables map[string]interface{}) (result map[string]string, err error) {
+func GetPlaceholder(variables map[string]interface{}) (result map[string]string, err error) {
 	result = map[string]string{
 		"brl": "{{",
 		"brr": "}}",
@@ -71,7 +71,7 @@ func getPlaceholder(variables map[string]interface{}) (result map[string]string,
 	return result, nil
 }
 
-func replaceReferences(str string, variables map[string]string) (string, error) {
+func Replace(str string, variables map[string]string) (string, error) {
 	tmpl, err := template.New("").Option("missingkey=zero").Parse(str)
 	if err != nil {
 		return str, err

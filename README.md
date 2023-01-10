@@ -1,4 +1,23 @@
-### Use Example
+# Script Env
+worker may receive scripts in the inputs named "prescript" and "postscript". 
+those scripts may be chunked by appending suffixes to the input which. 
+all inputs/scripts with the "prescript" prefix are sort by name, concatenated and executed before the worker code is run.
+all inputs/scipts with the "postscript" prefix are sort by name, concatenated and executed after the worker code is run.
+
+the script environment allows access to multiple apis to 
+- handle smart-service variables
+- read inputs
+- write outputs
+- access the device-repository
+- ...
+
+to allow the web-ui (https://github.com/SENERGY-Platform/web-ui) code completion in https://github.com/SENERGY-Platform/web-ui/tree/master/src/app/modules/smart-services/designer/dialog/edit-smart-service-task-dialog,
+this repository provides a code generator, that creates an ace completer by calling
+```
+go generate ./... > ace-code-completer.ts
+```
+
+# Use Example
 
 ```
 import (

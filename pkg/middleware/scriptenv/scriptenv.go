@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package middleware
+package scriptenv
 
 import (
 	"github.com/SENERGY-Platform/device-repository/lib/client"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/dop251/goja"
 	"strings"
 	"sync"
@@ -40,16 +41,6 @@ func NewScriptEnv(auth Auth, iotClient client.Interface, userId string, variable
 	return result
 }
 
-func RemoveScriptInputs(inputs map[string]interface{}) map[string]interface{} {
-	result := map[string]interface{}{}
-	for name, value := range inputs {
-		if !strings.HasPrefix(name, PostScriptPrefix) && !strings.HasPrefix(name, PreScriptPrefix) {
-			result[name] = value
-		}
-	}
-	return result
-}
-
 type ScriptEnv struct {
 	vm               *goja.Runtime
 	Variables        map[string]interface{}
@@ -61,6 +52,29 @@ type ScriptEnv struct {
 	userId           string
 	userToken        string
 	mux              sync.Mutex
+}
+
+type Auth interface {
+	ExchangeUserToken(userid string) (token auth.Token, err error)
+}
+
+type VariablesRepo interface {
+	GetVariables(processId string) (result map[string]interface{}, err error)
+	SetVariables(processId string, changes map[string]interface{}) error
+	GetInstanceUser(instanceId string) (userId string, err error)
+}
+
+const PreScriptPrefix = "prescript"
+const PostScriptPrefix = "postscript"
+
+func RemoveScriptInputs(inputs map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+	for name, value := range inputs {
+		if !strings.HasPrefix(name, PostScriptPrefix) && !strings.HasPrefix(name, PreScriptPrefix) {
+			result[name] = value
+		}
+	}
+	return result
 }
 
 func (this *ScriptEnv) RegisterRuntime(runtime *goja.Runtime) {
