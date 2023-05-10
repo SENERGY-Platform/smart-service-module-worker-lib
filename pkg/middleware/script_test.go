@@ -17,6 +17,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/dop251/goja"
 	"reflect"
@@ -71,7 +72,51 @@ func (this *ScriptContextMock) AssertDeviceName(expectedName string, device mode
 	}
 }
 
+func (this *ScriptContextMock) AssertString(expected string, actual string) {
+	defer func() {
+		if caught := recover(); caught != nil {
+			panic(this.vm.ToValue(caught))
+		}
+	}()
+	if expected != actual {
+		panic(fmt.Sprintf("expected != actual\n%#v\n!=\n%#v\n", expected, actual))
+	}
+}
+
+func (this *ScriptContextMock) TryDefault(mandatoryInput string, optionalInput bool) string {
+	defer func() {
+		if caught := recover(); caught != nil {
+			panic(this.vm.ToValue(caught))
+		}
+	}()
+	return fmt.Sprint(mandatoryInput, optionalInput)
+}
+
 func TestRunScript(t *testing.T) {
+	t.Run("io.tryDefault foo", func(t *testing.T) {
+		err := runScript(`io.assertString(io.tryDefault("foo"), "foofalse")`, &ScriptContextMock{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})
+
+	t.Run("io.tryDefault foo true", func(t *testing.T) {
+		err := runScript(`io.assertString(io.tryDefault("foo", true), "footrue")`, &ScriptContextMock{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})
+
+	t.Run("io.tryDefault foo false", func(t *testing.T) {
+		err := runScript(`io.assertString(io.tryDefault("foo", false), "foofalse")`, &ScriptContextMock{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})
+
 	t.Run("io.store", func(t *testing.T) {
 		err := runScript(`io.store("foo", 42)`, &ScriptContextMock{StoreFunc: func(name string, value interface{}) {
 			if name != "foo" {

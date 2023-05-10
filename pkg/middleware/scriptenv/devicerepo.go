@@ -107,13 +107,13 @@ func (this *ScriptEnvDeviceRepo) ListDeviceTypes(limit int64, offset int64, sort
 	return result
 }
 
-func (this *ScriptEnvDeviceRepo) GetDeviceTypeSelectables(query []model.FilterCriteria, pathPrefix string, includeModified bool) []model.DeviceTypeSelectable {
+func (this *ScriptEnvDeviceRepo) GetDeviceTypeSelectables(query []model.FilterCriteria, pathPrefix string, includeModified bool, servicesMustMatchAllCriteria bool) []model.DeviceTypeSelectable {
 	defer func() {
 		if caught := recover(); caught != nil {
 			panic(this.env.GetVm().ToValue(caught))
 		}
 	}()
-	result, err, _ := this.env.iotClient.GetDeviceTypeSelectablesV2(query, pathPrefix, includeModified)
+	result, err, _ := this.env.iotClient.GetDeviceTypeSelectablesV2(query, pathPrefix, includeModified, servicesMustMatchAllCriteria)
 	if err != nil {
 		panic(err)
 	}
