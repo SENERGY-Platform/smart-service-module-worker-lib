@@ -19,10 +19,11 @@
  * go generate ./... > ace-code-completer.ts
 */
 
-let Completer = {
-    getCompletions: function(_: any, session: any, pos: any, ___: any, callback: any) {
-        let line = session.doc.$lines[pos.row].slice(0, pos.column-1);
-        const isNewStatement = line.trim().length == 0 || line.trim().endsWith(";");
+const completer = {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    getCompletions(_: any, session: any, pos: any, ___: any, callback: any) {
+        const line = session.doc.$lines[pos.row].slice(0, pos.column-1);
+        const isNewStatement = line.trim().length === 0 || line.trim().endsWith(';');
         if(isNewStatement){
             callback(null, [
                 {{.newLineStatements}}
@@ -33,6 +34,6 @@ let Completer = {
             ]);
         }
     }
-}
+};
 
-export {Completer}
+export {completer};
