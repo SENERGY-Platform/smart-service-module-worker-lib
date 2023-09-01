@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.0
 
 require (
-	github.com/SENERGY-Platform/device-repository v0.0.0-20230809092745-feea50b09e00
+	github.com/SENERGY-Platform/device-repository v0.0.0-20230831060305-371ed940ca60
 	github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38
 	github.com/dop251/goja v0.0.0-20230828202809-3dbe69dd2b8e
 	github.com/golang-jwt/jwt v3.2.2+incompatible
