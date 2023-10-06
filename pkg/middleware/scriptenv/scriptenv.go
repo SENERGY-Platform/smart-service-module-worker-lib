@@ -95,6 +95,7 @@ func (this *ScriptEnv) GetEnvironment() map[string]interface{} {
 		"inputs":     NewInputsScriptEnv(this),
 		"outputs":    NewOutputsScriptEnv(this),
 		"deviceRepo": NewDeviceRepoScriptEnv(this),
+		"util":       NewScriptEnvUtil(this),
 	}
 }
 
