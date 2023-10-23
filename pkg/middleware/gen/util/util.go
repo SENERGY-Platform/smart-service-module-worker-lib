@@ -137,51 +137,51 @@ func GetInputParameter(param *ast.Field, defaultName string) (result Parameter) 
 }
 
 func GetInputAsTypeName(param *ast.Field) string {
-	switch t := param.Type.(type) {
+	return getInputAsTypeName(param.Type)
+}
+
+func getInputAsTypeName(param ast.Expr) string {
+	switch t := param.(type) {
 	case *ast.Ident:
-		return t.Name
+		return ToJsDocName(t.Name)
 	case *ast.SelectorExpr:
-		return t.Sel.Name
+		return ToJsDocName(t.Sel.Name)
 	case *ast.InterfaceType:
 		return "any"
+	case *ast.MapType:
+		return getInputAsTypeName(t.Value) + "_map"
 	case *ast.ArrayType:
-		switch element := t.Elt.(type) {
-		case *ast.Ident:
-			return element.Name + "_list"
-		case *ast.SelectorExpr:
-			return element.Sel.Name + "_list"
-		case *ast.InterfaceType:
-			return "list"
-		}
+		return getInputAsTypeName(t.Elt) + "_list"
 	}
 	return ""
 }
 
 func GetInputAsJsDocType(param *ast.Field) string {
-	switch t := param.Type.(type) {
+	return getInputAsJsDocType(param.Type)
+}
+
+func getInputAsJsDocType(param ast.Expr) string {
+	switch t := param.(type) {
 	case *ast.Ident:
-		return toJsDocName(t.Name)
+		return ToJsDocName(t.Name)
 	case *ast.SelectorExpr:
-		return toJsDocName(t.Sel.Name)
+		return ToJsDocName(t.Sel.Name)
 	case *ast.InterfaceType:
 		return "Object"
+	case *ast.MapType:
+		return "Map<string," + getInputAsJsDocType(t.Value) + ">"
 	case *ast.ArrayType:
-		switch element := t.Elt.(type) {
-		case *ast.Ident:
-			return toJsDocName(element.Name) + "[]"
-		case *ast.SelectorExpr:
-			return toJsDocName(element.Sel.Name) + "[]"
-		case *ast.InterfaceType:
-			return "Object[]"
-		}
+		return getInputAsJsDocType(t.Elt) + "[]"
 	}
 	return ""
 }
 
-func toJsDocName(name string) string {
+func ToJsDocName(name string) string {
 	switch name {
 	case "bool":
 		return "boolean"
+	case "int64", "int", "int32", "float", "float64", "float32":
+		return "number"
 	default:
 		return name
 	}

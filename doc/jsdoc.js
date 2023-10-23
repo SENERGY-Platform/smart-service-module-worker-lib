@@ -80,7 +80,7 @@
  * @param { boolean } descendants
  * @returns { Function[] }
  * @example
- * deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_bool, descendants_as_bool)
+ * deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_boolean, descendants_as_boolean)
  */
 
 /** 
@@ -89,7 +89,7 @@
  * @param { boolean } descendants
  * @returns { AspectNode[] }
  * @example
- * deviceRepo.getAspectNodesWithMeasuringFunction(ancestors_as_bool, descendants_as_bool)
+ * deviceRepo.getAspectNodesWithMeasuringFunction(ancestors_as_boolean, descendants_as_boolean)
  */
 
 /** 
@@ -105,7 +105,7 @@
  * @param { boolean } descendants
  * @returns { Aspect[] }
  * @example
- * deviceRepo.getAspectsWithMeasuringFunction(ancestors_as_bool, descendants_as_bool)
+ * deviceRepo.getAspectsWithMeasuringFunction(ancestors_as_boolean, descendants_as_boolean)
  */
 
 /** 
@@ -178,7 +178,7 @@
  * @param { boolean } servicesMustMatchAllCriteria
  * @returns { DeviceTypeSelectable[] }
  * @example
- * deviceRepo.getDeviceTypeSelectables(query_as_FilterCriteria_list, pathPrefix_as_string, includeModified_as_bool, servicesMustMatchAllCriteria_as_bool)
+ * deviceRepo.getDeviceTypeSelectables(query_as_FilterCriteria_list, pathPrefix_as_string, includeModified_as_boolean, servicesMustMatchAllCriteria_as_boolean)
  */
 
 /** 
@@ -222,15 +222,15 @@
 
 /** 
  * @function deviceRepo#listDeviceTypes
- * @param { int64 } limit
- * @param { int64 } offset
+ * @param { number } limit
+ * @param { number } offset
  * @param { string } sort
  * @param { FilterCriteria[] } filter
  * @param { boolean } includeModified
  * @param { boolean } includeUnmodified
  * @returns { DeviceType[] }
  * @example
- * deviceRepo.listDeviceTypes(limit_as_int64, offset_as_int64, sort_as_string, filter_as_FilterCriteria_list, includeModified_as_bool, includeUnmodified_as_bool)
+ * deviceRepo.listDeviceTypes(limit_as_number, offset_as_number, sort_as_string, filter_as_FilterCriteria_list, includeModified_as_boolean, includeUnmodified_as_boolean)
  */
 
 /** 
@@ -239,7 +239,7 @@
  * @param { boolean } asLocalId
  * @returns { string[] }
  * @example
- * deviceRepo.listHubDeviceIds(id_as_string, asLocalId_as_bool)
+ * deviceRepo.listHubDeviceIds(id_as_string, asLocalId_as_boolean)
  */
 
 /** 
@@ -376,7 +376,7 @@
  * GroupIotOptionsByDevice groups a list of model.IotOption by their device id; options that are not devices will be grouped under ""
  * @function util#groupIotOptionsByDevice
  * @param { IotOption[] } entities
- * @returns {  }
+ * @returns { Map<string,IotOption[]> }
  * @example
  * util.groupIotOptionsByDevice(entities_as_IotOption_list)
  */
@@ -385,7 +385,7 @@
  * GroupIotOptionsByService groups a list of IotOption by their service id; options that are not devices or dont hav a service-id will be grouped under ""
  * @function util#groupIotOptionsByService
  * @param { IotOption[] } entities
- * @returns {  }
+ * @returns { Map<string,IotOption[]> }
  * @example
  * util.groupIotOptionsByService(entities_as_IotOption_list)
  */
@@ -506,4 +506,256 @@ throws exception if variable is unknown
  * @param { Object } value
  * @example
  * variables.write(name_as_string, value_as_any)
+ */
+
+/**
+ * @typedef {Object} Aspect
+ * @property { string } Id
+ * @property { string } Name
+ * @property { Aspect[] } SubAspects
+ */
+
+/**
+ * @typedef {Object} AspectNode
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string } RootId
+ * @property { string } ParentId
+ * @property { string[] } ChildIds
+ * @property { string[] } AncestorIds
+ * @property { string[] } DescendentIds
+ */
+
+/**
+ * @typedef {Object} Attribute
+ * @property { string } Key
+ * @property { string } Value
+ * @property { string } Origin
+ */
+
+/**
+ * @typedef {Object} Characteristic
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string } DisplayUnit
+ * @property { Type } Type
+ * @property { Object|null } MinValue
+ * @property { Object|null } MaxValue
+ * @property { Object|null[] } AllowedValues
+ * @property { Object|null } Value
+ * @property { Characteristic[] } SubCharacteristics
+ */
+
+/**
+ * @typedef {Object} Concept
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string[] } CharacteristicIds
+ * @property { string } BaseCharacteristicId
+ * @property { ConverterExtension[] } Conversions
+ */
+
+/**
+ * @typedef {Object} ConceptWithCharacteristics
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string } BaseCharacteristicId
+ * @property { Characteristic[] } Characteristics
+ * @property { ConverterExtension[] } Conversions
+ */
+
+/**
+ * @typedef {Object} Configurable
+ * @property { string } Path
+ * @property { string } CharacteristicId
+ * @property { AspectNode } AspectNode
+ * @property { string } FunctionId
+ * @property { Object|null } Value
+ * @property { Type } Type
+ */
+
+/**
+ * @typedef {Object} Content
+ * @property { string } Id
+ * @property { ContentVariable } ContentVariable
+ * @property { Serialization } Serialization
+ * @property { string } ProtocolSegmentId
+ */
+
+/**
+ * @typedef {Object} ContentVariable
+ * @property { string } Id
+ * @property { string } Name
+ * @property { boolean } IsVoid
+ * @property { boolean } OmitEmpty
+ * @property { Type } Type
+ * @property { ContentVariable[] } SubContentVariables
+ * @property { string } CharacteristicId
+ * @property { Object|null } Value
+ * @property { string[] } SerializationOptions
+ * @property { string } UnitReference
+ * @property { string } FunctionId
+ * @property { string } AspectId
+ */
+
+/**
+ * @typedef {Object} ConverterExtension
+ * @property { string } From
+ * @property { string } To
+ * @property { number } Distance
+ * @property { string } Formula
+ * @property { string } PlaceholderName
+ */
+
+/**
+ * @typedef {Object} Device
+ * @property { string } Id
+ * @property { string } LocalId
+ * @property { string } Name
+ * @property { Attribute[] } Attributes
+ * @property { string } DeviceTypeId
+ */
+
+/**
+ * @typedef {Object} DeviceClass
+ * @property { string } Id
+ * @property { string } Image
+ * @property { string } Name
+ */
+
+/**
+ * @typedef {Object} DeviceGroup
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string } Image
+ * @property { DeviceGroupFilterCriteria[] } Criteria
+ * @property { string[] } DeviceIds
+ * @property { string[] } CriteriaShort
+ * @property { Attribute[] } Attributes
+ */
+
+/**
+ * @typedef {Object} DeviceGroupFilterCriteria
+ * @property { Interaction } Interaction
+ * @property { string } FunctionId
+ * @property { string } AspectId
+ * @property { string } DeviceClassId
+ */
+
+/**
+ * @typedef {Object} DeviceGroupSelection
+ * @property { string } Id
+ */
+
+/**
+ * @typedef {Object} DeviceSelection
+ * @property { string } DeviceId
+ * @property { string|null } ServiceId
+ * @property { string|null } Path
+ * @property { string|null } CharacteristicId
+ */
+
+/**
+ * @typedef {Object} DeviceType
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string } Description
+ * @property { ServiceGroup[] } ServiceGroups
+ * @property { Service[] } Services
+ * @property { string } DeviceClassId
+ * @property { Attribute[] } Attributes
+ */
+
+/**
+ * @typedef {Object} DeviceTypeSelectable
+ * @property { string } DeviceTypeId
+ * @property { Service[] } Services
+ * @property { Map<string,ServicePathOption[]> } ServicePathOptions
+ */
+
+/**
+ * @typedef {Object} FilterCriteria
+ * @property { Interaction } Interaction
+ * @property { string } FunctionId
+ * @property { string } DeviceClassId
+ * @property { string } AspectId
+ */
+
+/**
+ * @typedef {Object} Function
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string } DisplayName
+ * @property { string } Description
+ * @property { string } ConceptId
+ * @property { string } RdfType
+ */
+
+/**
+ * @typedef {Object} GenericEventSource
+ * @property { string } FilterType
+ * @property { string } FilterIds
+ * @property { string } Topic
+ * @property { string } Path
+ * @property { string|null } CharacteristicId
+ */
+
+/**
+ * @typedef {Object} Hub
+ * @property { string } Id
+ * @property { string } Name
+ * @property { string } Hash
+ * @property { string[] } DeviceLocalIds
+ * @property { string[] } DeviceIds
+ */
+
+/**
+ * @typedef {Object} ImportSelection
+ * @property { string } Id
+ * @property { string|null } Path
+ * @property { string|null } CharacteristicId
+ */
+
+/**
+ * @typedef {Object} IotOption
+ * @property { DeviceSelection|null } DeviceSelection
+ * @property { DeviceGroupSelection|null } DeviceGroupSelection
+ * @property { ImportSelection|null } ImportSelection
+ * @property { GenericEventSource|null } GenericEventSource
+ */
+
+/**
+ * @typedef {Object} Service
+ * @property { string } Id
+ * @property { string } LocalId
+ * @property { string } Name
+ * @property { string } Description
+ * @property { Interaction } Interaction
+ * @property { string } ProtocolId
+ * @property { Content[] } Inputs
+ * @property { Content[] } Outputs
+ * @property { Attribute[] } Attributes
+ * @property { string } ServiceGroupKey
+ */
+
+/**
+ * @typedef {Object} ServiceGroup
+ * @property { string } Key
+ * @property { string } Name
+ * @property { string } Description
+ */
+
+/**
+ * @typedef {Object} ServicePathOption
+ * @property { string } ServiceId
+ * @property { string } Path
+ * @property { string } CharacteristicId
+ * @property { AspectNode } AspectNode
+ * @property { string } FunctionId
+ * @property { boolean } IsVoid
+ * @property { Object|null } Value
+ * @property { boolean } IsControllingFunction
+ * @property { Configurable[] } Configurables
+ * @property { Type } Type
+ * @property { Interaction } Interaction
  */

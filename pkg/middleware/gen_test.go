@@ -18,11 +18,21 @@ package middleware
 
 import (
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/acecodecompleter"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/jsdoc"
 	"testing"
 )
 
-func TestGen(t *testing.T) {
+func TestGenerateTsAceCodeCompleter(t *testing.T) {
 	result, err := acecodecompleter.GenerateTsAceCodeCompleter("./scriptenv")
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Log(result)
+	}
+}
+
+func TestGenerateJsDoc(t *testing.T) {
+	result, err := jsdoc.GenerateJsDoc("./scriptenv")
 	if err != nil {
 		t.Error(err)
 	} else {

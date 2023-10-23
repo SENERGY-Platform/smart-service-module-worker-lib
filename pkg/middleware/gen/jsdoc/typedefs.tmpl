@@ -1,0 +1,6 @@
+{{range $element := .}}
+/**
+ * @typedef {Object} {{$element.Name}}
+{{range $field := $element.Fields}} * @property { {{$field.Type}} } {{$field.Name}}
+{{end}} */
+{{end}}

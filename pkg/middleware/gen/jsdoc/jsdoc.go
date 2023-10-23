@@ -31,6 +31,9 @@ var methodsTmplStr string
 //go:embed namespaces.tmpl
 var namespacesTmplStr string
 
+//go:embed typedefs.tmpl
+var typedefTmplStr string
+
 //go:embed jsdoc.tmpl
 var jsdocTemplStr string
 
@@ -68,9 +71,21 @@ func GenerateJsDoc(pathToScriptenv string) (string, error) {
 		return "", err
 	}
 
+	typedefTmpl, err := template.New("typedefTmpl").Option("missingkey=zero").Parse(typedefTmplStr)
+	if err != nil {
+		return "", err
+	}
+
+	typedefBuilder := strings.Builder{}
+	err = typedefTmpl.Execute(&methodsBuilder, GetTypeDefs())
+	if err != nil {
+		return "", err
+	}
+
 	jsdocTemplInputs := map[string]string{
 		"namespaces": namespacesBuilder.String(),
 		"methods":    methodsBuilder.String(),
+		"typedefs":   typedefBuilder.String(),
 	}
 
 	jsdocTempl, err := template.New("jsdocTempl").Option("missingkey=zero").Parse(jsdocTemplStr)

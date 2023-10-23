@@ -48,12 +48,12 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getAspectNodesMeasuringFunctions',
-    value: 'var result_as_Function_list = deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_bool, descendants_as_bool);',
+    value: 'var result_as_Function_list = deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_boolean, descendants_as_boolean);',
     meta: 'static'
 },
 {
     caption: 'deviceRepo.getAspectNodesWithMeasuringFunction',
-    value: 'var result_as_AspectNode_list = deviceRepo.getAspectNodesWithMeasuringFunction(ancestors_as_bool, descendants_as_bool);',
+    value: 'var result_as_AspectNode_list = deviceRepo.getAspectNodesWithMeasuringFunction(ancestors_as_boolean, descendants_as_boolean);',
     meta: 'static'
 },
 {
@@ -63,7 +63,7 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getAspectsWithMeasuringFunction',
-    value: 'var result_as_Aspect_list = deviceRepo.getAspectsWithMeasuringFunction(ancestors_as_bool, descendants_as_bool);',
+    value: 'var result_as_Aspect_list = deviceRepo.getAspectsWithMeasuringFunction(ancestors_as_boolean, descendants_as_boolean);',
     meta: 'static'
 },
 {
@@ -108,7 +108,7 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getDeviceTypeSelectables',
-    value: 'var result_as_DeviceTypeSelectable_list = deviceRepo.getDeviceTypeSelectables(query_as_FilterCriteria_list, pathPrefix_as_string, includeModified_as_bool, servicesMustMatchAllCriteria_as_bool);',
+    value: 'var result_as_DeviceTypeSelectable_list = deviceRepo.getDeviceTypeSelectables(query_as_FilterCriteria_list, pathPrefix_as_string, includeModified_as_boolean, servicesMustMatchAllCriteria_as_boolean);',
     meta: 'static'
 },
 {
@@ -138,12 +138,12 @@ const completer = {
 },
 {
     caption: 'deviceRepo.listDeviceTypes',
-    value: 'var result_as_DeviceType_list = deviceRepo.listDeviceTypes(limit_as_int64, offset_as_int64, sort_as_string, filter_as_FilterCriteria_list, includeModified_as_bool, includeUnmodified_as_bool);',
+    value: 'var result_as_DeviceType_list = deviceRepo.listDeviceTypes(limit_as_number, offset_as_number, sort_as_string, filter_as_FilterCriteria_list, includeModified_as_boolean, includeUnmodified_as_boolean);',
     meta: 'static'
 },
 {
     caption: 'deviceRepo.listHubDeviceIds',
-    value: 'var result_as_string_list = deviceRepo.listHubDeviceIds(id_as_string, asLocalId_as_bool);',
+    value: 'var result_as_string_list = deviceRepo.listHubDeviceIds(id_as_string, asLocalId_as_boolean);',
     meta: 'static'
 },
 {
@@ -173,7 +173,7 @@ const completer = {
 },
 {
     caption: 'inputs.exists',
-    value: 'var result_as_bool = inputs.exists(name_as_string);',
+    value: 'var result_as_boolean = inputs.exists(name_as_string);',
     meta: 'static'
 },
 {
@@ -183,7 +183,7 @@ const completer = {
 },
 {
     caption: 'inputs.list',
-    value: 'var result_as_list = inputs.list();',
+    value: 'var result_as_any_list = inputs.list();',
     meta: 'static'
 },
 {
@@ -213,42 +213,42 @@ const completer = {
 },
 {
     caption: 'util.groupIotOptionsByDevice',
-    value: 'var result = util.groupIotOptionsByDevice(entities_as_IotOption_list);',
+    value: 'var result_as_IotOption_list_map = util.groupIotOptionsByDevice(entities_as_IotOption_list);',
     meta: 'static'
 },
 {
     caption: 'util.groupIotOptionsByService',
-    value: 'var result = util.groupIotOptionsByService(entities_as_IotOption_list);',
+    value: 'var result_as_IotOption_list_map = util.groupIotOptionsByService(entities_as_IotOption_list);',
     meta: 'static'
 },
 {
     caption: 'util.isDeviceGroupIotOption',
-    value: 'var result_as_bool = util.isDeviceGroupIotOption(entity_as_IotOption);',
+    value: 'var result_as_boolean = util.isDeviceGroupIotOption(entity_as_IotOption);',
     meta: 'static'
 },
 {
     caption: 'util.isDeviceGroupIotOptionStr',
-    value: 'var result_as_bool = util.isDeviceGroupIotOptionStr(entityStr_as_string);',
+    value: 'var result_as_boolean = util.isDeviceGroupIotOptionStr(entityStr_as_string);',
     meta: 'static'
 },
 {
     caption: 'util.isDeviceIotOption',
-    value: 'var result_as_bool = util.isDeviceIotOption(entity_as_IotOption);',
+    value: 'var result_as_boolean = util.isDeviceIotOption(entity_as_IotOption);',
     meta: 'static'
 },
 {
     caption: 'util.isDeviceIotOptionStr',
-    value: 'var result_as_bool = util.isDeviceIotOptionStr(entityStr_as_string);',
+    value: 'var result_as_boolean = util.isDeviceIotOptionStr(entityStr_as_string);',
     meta: 'static'
 },
 {
     caption: 'util.isImportIotOption',
-    value: 'var result_as_bool = util.isImportIotOption(entity_as_IotOption);',
+    value: 'var result_as_boolean = util.isImportIotOption(entity_as_IotOption);',
     meta: 'static'
 },
 {
     caption: 'util.isImportIotOptionStr',
-    value: 'var result_as_bool = util.isImportIotOptionStr(entityStr_as_string);',
+    value: 'var result_as_boolean = util.isImportIotOptionStr(entityStr_as_string);',
     meta: 'static'
 },
 {
@@ -268,7 +268,7 @@ const completer = {
 },
 {
     caption: 'variables.exists',
-    value: 'var result_as_bool = variables.exists(name_as_string);',
+    value: 'var result_as_boolean = variables.exists(name_as_string);',
     meta: 'static'
 },
 {
@@ -321,12 +321,12 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getAspectNodesMeasuringFunctions',
-    value: 'deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_bool, descendants_as_bool)',
+    value: 'deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_boolean, descendants_as_boolean)',
     meta: 'static'
 },
 {
     caption: 'deviceRepo.getAspectNodesWithMeasuringFunction',
-    value: 'deviceRepo.getAspectNodesWithMeasuringFunction(ancestors_as_bool, descendants_as_bool)',
+    value: 'deviceRepo.getAspectNodesWithMeasuringFunction(ancestors_as_boolean, descendants_as_boolean)',
     meta: 'static'
 },
 {
@@ -336,7 +336,7 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getAspectsWithMeasuringFunction',
-    value: 'deviceRepo.getAspectsWithMeasuringFunction(ancestors_as_bool, descendants_as_bool)',
+    value: 'deviceRepo.getAspectsWithMeasuringFunction(ancestors_as_boolean, descendants_as_boolean)',
     meta: 'static'
 },
 {
@@ -381,7 +381,7 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getDeviceTypeSelectables',
-    value: 'deviceRepo.getDeviceTypeSelectables(query_as_FilterCriteria_list, pathPrefix_as_string, includeModified_as_bool, servicesMustMatchAllCriteria_as_bool)',
+    value: 'deviceRepo.getDeviceTypeSelectables(query_as_FilterCriteria_list, pathPrefix_as_string, includeModified_as_boolean, servicesMustMatchAllCriteria_as_boolean)',
     meta: 'static'
 },
 {
@@ -411,12 +411,12 @@ const completer = {
 },
 {
     caption: 'deviceRepo.listDeviceTypes',
-    value: 'deviceRepo.listDeviceTypes(limit_as_int64, offset_as_int64, sort_as_string, filter_as_FilterCriteria_list, includeModified_as_bool, includeUnmodified_as_bool)',
+    value: 'deviceRepo.listDeviceTypes(limit_as_number, offset_as_number, sort_as_string, filter_as_FilterCriteria_list, includeModified_as_boolean, includeUnmodified_as_boolean)',
     meta: 'static'
 },
 {
     caption: 'deviceRepo.listHubDeviceIds',
-    value: 'deviceRepo.listHubDeviceIds(id_as_string, asLocalId_as_bool)',
+    value: 'deviceRepo.listHubDeviceIds(id_as_string, asLocalId_as_boolean)',
     meta: 'static'
 },
 {
