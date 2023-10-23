@@ -344,6 +344,7 @@
  */
 
 /** 
+ * GetDevicesWithServiceFromEntityString finds a list of iot-options where the entity is the same the input, but the Service field is set with those that match the input criteria
  * @function util#getDevicesWithServiceFromEntityString
  * @param { string } entityStr
  * @param { FilterCriteria[] } criteria
@@ -353,6 +354,7 @@
  */
 
 /** 
+ * GetDevicesWithServiceFromIotOption finds a list of iot-options where the entity is the same the input, but the Service field is set with those that match the input criteria
  * @function util#getDevicesWithServiceFromIotOption
  * @param { IotOption } entity
  * @param { FilterCriteria[] } criteria
@@ -371,6 +373,7 @@
  */
 
 /** 
+ * GroupIotOptionsByDevice groups a list of model.IotOption by their device id; options that are not devices will be grouped under ""
  * @function util#groupIotOptionsByDevice
  * @param { IotOption[] } entities
  * @returns {  }
@@ -379,6 +382,7 @@
  */
 
 /** 
+ * GroupIotOptionsByService groups a list of IotOption by their service id; options that are not devices or dont hav a service-id will be grouped under ""
  * @function util#groupIotOptionsByService
  * @param { IotOption[] } entities
  * @returns {  }
@@ -387,6 +391,7 @@
  */
 
 /** 
+ * IsDeviceGroupIotOption checks if the input is a device-group
  * @function util#isDeviceGroupIotOption
  * @param { IotOption } entity
  * @returns { boolean }
@@ -395,6 +400,7 @@
  */
 
 /** 
+ * IsDeviceGroupIotOptionStr checks if the input is a device-group
  * @function util#isDeviceGroupIotOptionStr
  * @param { string } entityStr
  * @returns { boolean }
@@ -403,6 +409,7 @@
  */
 
 /** 
+ * IsDeviceIotOption checks if the input is a device
  * @function util#isDeviceIotOption
  * @param { IotOption } entity
  * @returns { boolean }
@@ -411,6 +418,7 @@
  */
 
 /** 
+ * IsDeviceIotOptionStr checks if the input is a device
  * @function util#isDeviceIotOptionStr
  * @param { string } entityStr
  * @returns { boolean }
@@ -419,6 +427,7 @@
  */
 
 /** 
+ * IsImportIotOption checks if the input is a import
  * @function util#isImportIotOption
  * @param { IotOption } entity
  * @returns { boolean }
@@ -427,6 +436,7 @@
  */
 
 /** 
+ * IsImportIotOptionStr checks if the input is a import
  * @function util#isImportIotOptionStr
  * @param { string } entityStr
  * @returns { boolean }
