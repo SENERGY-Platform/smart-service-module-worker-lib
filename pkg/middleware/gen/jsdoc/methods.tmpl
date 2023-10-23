@@ -4,5 +4,7 @@
  * @function {{$element.Prefix}}#{{$element.Method}}
 {{range $inp := $element.Inputs}} * @param { {{$inp.Type}} } {{$inp.Name}}
 {{end}}{{if $element.Result}} * @returns { {{$element.Result.Type}} }
-{{end}} */
+{{end}} * @example
+ * {{.Prefix}}.{{.Method}}({{.InputsStr}})
+ */
 {{end}}
