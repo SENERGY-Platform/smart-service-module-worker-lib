@@ -14,7 +14,7 @@ the script environment allows access to multiple apis to
 to allow the web-ui (https://github.com/SENERGY-Platform/web-ui) code completion in https://github.com/SENERGY-Platform/web-ui/tree/master/src/app/modules/smart-services/designer/dialog/edit-smart-service-task-dialog,
 this repository provides a code generator, that creates an ace completer by calling
 ```
-go generate ./... > ace-code-completer.ts
+go generate ./...
 ```
 
 # Use Example

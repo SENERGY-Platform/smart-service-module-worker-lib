@@ -18,13 +18,8 @@ package acecodecompleter
 
 import (
 	_ "embed"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/scriptenv"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"reflect"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/util"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 )
@@ -39,45 +34,24 @@ var assignmentTmplStr string
 var completerTmplStr string
 
 func GenerateTsAceCodeCompleter(pathToScriptenv string) (string, error) {
-	scriptEnvMapping := getScriptEnvMapping()
+	methods := util.GetScriptEnvMethodTemplateInfos(pathToScriptenv)
 
-	f, err := parser.ParseDir(token.NewFileSet(), pathToScriptenv, nil, parser.ParseComments)
-	if err != nil {
-		panic(err)
-	}
+	statementTemplInputs := []util.Info{}
+	assignmentTmplInputs := []util.Info{}
 
-	statementTemplInputs := []map[string]interface{}{}
-	assignmentTmplInputs := []map[string]interface{}{}
-
-	for key, typeName := range scriptEnvMapping {
-		for _, method := range filterMethods(f, typeName) {
-			templInputs := map[string]interface{}{
-				"prefix":     key,
-				"method":     uncapitalize(method.Name.Name),
-				"inputs":     "",
-				"resultName": nil,
-			}
-			inputList := []string{}
-			for i, param := range method.Type.Params.List {
-				inputList = append(inputList, getInputAsNameAndType(param, "param"+strconv.Itoa(i)))
-			}
-			if method.Type.Results != nil && len(method.Type.Results.List) > 0 {
-				templInputs["resultName"] = getInputAsNameAndType(method.Type.Results.List[0], "result")
-			}
-			templInputs["inputs"] = strings.Join(inputList, ", ")
-			if templInputs["resultName"] != nil {
-				assignmentTmplInputs = append(assignmentTmplInputs, templInputs)
-			} else {
-				statementTemplInputs = append(statementTemplInputs, templInputs)
-			}
+	for _, info := range methods {
+		if info.Result != nil {
+			assignmentTmplInputs = append(assignmentTmplInputs, info)
+		} else {
+			statementTemplInputs = append(statementTemplInputs, info)
 		}
 	}
 
 	sort.Slice(statementTemplInputs, func(i, j int) bool {
-		return statementTemplInputs[i]["prefix"].(string)+"."+statementTemplInputs[i]["method"].(string) < statementTemplInputs[j]["prefix"].(string)+"."+statementTemplInputs[j]["method"].(string)
+		return statementTemplInputs[i].Prefix+"."+statementTemplInputs[i].Method < statementTemplInputs[j].Prefix+"."+statementTemplInputs[j].Method
 	})
 	sort.Slice(assignmentTmplInputs, func(i, j int) bool {
-		return assignmentTmplInputs[i]["prefix"].(string)+"."+assignmentTmplInputs[i]["method"].(string) < assignmentTmplInputs[j]["prefix"].(string)+"."+assignmentTmplInputs[j]["method"].(string)
+		return assignmentTmplInputs[i].Prefix+"."+assignmentTmplInputs[i].Method < assignmentTmplInputs[j].Prefix+"."+assignmentTmplInputs[j].Method
 	})
 
 	statementTempl, err := template.New("").Option("missingkey=zero").Parse(statementTmplStr)
@@ -122,71 +96,4 @@ func GenerateTsAceCodeCompleter(pathToScriptenv string) (string, error) {
 	builder := strings.Builder{}
 	err = completerTempl.Execute(&builder, completerTemplInputs)
 	return builder.String(), err
-}
-
-func uncapitalize(s string) string {
-	if s == "" {
-		return ""
-	}
-	if len(s) == 1 {
-		return strings.ToLower(s[0:1])
-	}
-	return strings.ToLower(s[0:1]) + s[1:]
-}
-
-func getInputAsNameAndType(param *ast.Field, defaultName string) string {
-	name := defaultName
-	if len(param.Names) > 0 {
-		name = param.Names[0].Name
-	}
-	switch t := param.Type.(type) {
-	case *ast.Ident:
-		name = name + "_as_" + t.Name
-	case *ast.SelectorExpr:
-		name = name + "_as_" + t.Sel.Name
-	case *ast.InterfaceType:
-		name = name + "_as_any"
-	case *ast.ArrayType:
-		switch element := t.Elt.(type) {
-		case *ast.Ident:
-			name = name + "_as_" + element.Name + "_list"
-		case *ast.SelectorExpr:
-			name = name + "_as_" + element.Sel.Name + "_list"
-		case *ast.InterfaceType:
-			name = name + "_as_list"
-		}
-	}
-	return name
-}
-
-func filterMethods(dirAst map[string]*ast.Package, typeName string) (result []*ast.FuncDecl) {
-	for _, packageAst := range dirAst {
-		for _, fileAst := range packageAst.Files {
-			for _, decl := range fileAst.Decls {
-				fdecl, ok := decl.(*ast.FuncDecl)
-				if ok && fdecl.Recv != nil && len(fdecl.Recv.List) > 0 {
-					ptr, isStarExp := fdecl.Recv.List[0].Type.(*ast.StarExpr)
-					if isStarExp {
-						receiverType, isIdent := ptr.X.(*ast.Ident)
-						if isIdent && receiverType.Name == typeName {
-							result = append(result, fdecl)
-						}
-					}
-				}
-			}
-		}
-	}
-	return result
-}
-
-func getScriptEnvMapping() map[string]string {
-	result := map[string]string{}
-	for key, obj := range (&scriptenv.ScriptEnv{}).GetEnvironment() {
-		name := reflect.TypeOf(obj).Name()
-		if name == "" && reflect.TypeOf(obj).Kind() == reflect.Pointer {
-			name = reflect.TypeOf(obj).Elem().Name()
-		}
-		result[key] = name
-	}
-	return result
 }
