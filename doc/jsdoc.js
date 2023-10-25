@@ -78,7 +78,7 @@
  * @param { string } id
  * @param { boolean } ancestors
  * @param { boolean } descendants
- * @returns { Function[] }
+ * @returns { FunctionType[] }
  * @example
  * deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_boolean, descendants_as_boolean)
  */
@@ -150,7 +150,7 @@
 /** 
  * @function deviceRepo#getDeviceClassesControllingFunctions
  * @param { string } id
- * @returns { Function[] }
+ * @returns { FunctionType[] }
  * @example
  * deviceRepo.getDeviceClassesControllingFunctions(id_as_string)
  */
@@ -158,7 +158,7 @@
 /** 
  * @function deviceRepo#getDeviceClassesFunctions
  * @param { string } id
- * @returns { Function[] }
+ * @returns { FunctionType[] }
  * @example
  * deviceRepo.getDeviceClassesFunctions(id_as_string)
  */
@@ -184,7 +184,7 @@
 /** 
  * @function deviceRepo#getFunction
  * @param { string } id
- * @returns { Function }
+ * @returns { FunctionType }
  * @example
  * deviceRepo.getFunction(id_as_string)
  */
@@ -192,7 +192,7 @@
 /** 
  * @function deviceRepo#getFunctionsByType
  * @param { string } rdfType
- * @returns { Function[] }
+ * @returns { FunctionType[] }
  * @example
  * deviceRepo.getFunctionsByType(rdfType_as_string)
  */
@@ -682,7 +682,7 @@ throws exception if variable is unknown
  */
 
 /**
- * @typedef {Object} Function
+ * @typedef {Object} FunctionType
  * @property { string } Id
  * @property { string } Name
  * @property { string } DisplayName

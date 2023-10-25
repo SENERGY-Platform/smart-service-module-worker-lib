@@ -94,7 +94,7 @@ func getTypeDef(t reflect.Type, done []string) (result []TypeDef) {
 		}
 	}()
 	this := TypeDef{
-		Name:   t.Name(),
+		Name:   util.ToJsDocName(t.Name()),
 		Fields: nil,
 	}
 	if slices.Contains(done, this.Name) {

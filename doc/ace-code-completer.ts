@@ -48,7 +48,7 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getAspectNodesMeasuringFunctions',
-    value: 'var result_as_Function_list = deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_boolean, descendants_as_boolean);',
+    value: 'var result_as_FunctionType_list = deviceRepo.getAspectNodesMeasuringFunctions(id_as_string, ancestors_as_boolean, descendants_as_boolean);',
     meta: 'static'
 },
 {
@@ -93,12 +93,12 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getDeviceClassesControllingFunctions',
-    value: 'var result_as_Function_list = deviceRepo.getDeviceClassesControllingFunctions(id_as_string);',
+    value: 'var result_as_FunctionType_list = deviceRepo.getDeviceClassesControllingFunctions(id_as_string);',
     meta: 'static'
 },
 {
     caption: 'deviceRepo.getDeviceClassesFunctions',
-    value: 'var result_as_Function_list = deviceRepo.getDeviceClassesFunctions(id_as_string);',
+    value: 'var result_as_FunctionType_list = deviceRepo.getDeviceClassesFunctions(id_as_string);',
     meta: 'static'
 },
 {
@@ -113,12 +113,12 @@ const completer = {
 },
 {
     caption: 'deviceRepo.getFunction',
-    value: 'var result_as_Function = deviceRepo.getFunction(id_as_string);',
+    value: 'var result_as_FunctionType = deviceRepo.getFunction(id_as_string);',
     meta: 'static'
 },
 {
     caption: 'deviceRepo.getFunctionsByType',
-    value: 'var result_as_Function_list = deviceRepo.getFunctionsByType(rdfType_as_string);',
+    value: 'var result_as_FunctionType_list = deviceRepo.getFunctionsByType(rdfType_as_string);',
     meta: 'static'
 },
 {

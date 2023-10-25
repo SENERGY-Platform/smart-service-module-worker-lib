@@ -178,6 +178,8 @@ func getInputAsJsDocType(param ast.Expr) string {
 
 func ToJsDocName(name string) string {
 	switch name {
+	case "Function":
+		return "FunctionType"
 	case "bool":
 		return "boolean"
 	case "int64", "int", "int32", "float", "float64", "float32":
