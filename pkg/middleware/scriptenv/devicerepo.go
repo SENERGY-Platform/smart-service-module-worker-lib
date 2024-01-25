@@ -126,7 +126,7 @@ func (this *ScriptEnvDeviceRepo) ReadDeviceGroup(id string) models.DeviceGroup {
 			panic(this.env.GetVm().ToValue(caught))
 		}
 	}()
-	result, err, _ := this.env.iotClient.ReadDeviceGroup(id, this.env.getToken())
+	result, err, _ := this.env.iotClient.ReadDeviceGroup(id, this.env.getToken(), false)
 	if err != nil {
 		panic(err)
 	}
