@@ -31,6 +31,7 @@ func runScript(script string, ctx ScriptContext) (err error) {
 	time.AfterFunc(2*time.Second, func() {
 		vm.Interrupt("script execution timeout")
 	})
+	ctx.RegisterRuntime(vm)
 	vm.SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
 	for key, value := range ctx.GetEnvironment() {
 		err = vm.Set(key, value)

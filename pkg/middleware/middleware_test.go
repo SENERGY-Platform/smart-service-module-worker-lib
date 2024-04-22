@@ -17,8 +17,10 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"github.com/SENERGY-Platform/device-repository/lib/client"
+	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
@@ -49,7 +51,7 @@ func TestMiddleware(t *testing.T) {
 		}, nil
 	}}
 
-	testIotClient, _, _, err := client.NewTestClient()
+	testIotClient, testDb, sec, err := client.NewTestClient()
 	if err != nil {
 		t.Error(err)
 		return
@@ -57,47 +59,160 @@ func TestMiddleware(t *testing.T) {
 
 	middleware := New(handler, repo, AuthMock("test-token"), testIotClient)
 
-	_, outputs, err := middleware.Do(model.CamundaExternalTask{
-		Variables: map[string]model.CamundaVariable{
-			"templ": {Value: "{{.brl}}placeholder{{.brr}}"},
-			"str":   {Value: "{{.v1}}"},
-			//"strJson":   {Value: "{{.v1_json}}"},
-			"number":    {Value: "{{.v2}}"},
-			"bool":      {Value: "{{.v3}}"},
-			"null":      {Value: "{{.v4}}"},
-			"obj":       {Value: "{{.v5}}"},
-			"unknown":   {Value: "{{.unknown}}"},
-			"rawStr":    {Value: "raw"},
-			"rawNumber": {Value: 13},
-			"rawBool":   {Value: true},
-			"rawNull":   {Value: nil},
-		},
+	t.Run("check placeholder substitution", func(t *testing.T) {
+		_, outputs, err := middleware.Do(model.CamundaExternalTask{
+			Variables: map[string]model.CamundaVariable{
+				"templ": {Value: "{{.brl}}placeholder{{.brr}}"},
+				"str":   {Value: "{{.v1}}"},
+				//"strJson":   {Value: "{{.v1_json}}"},
+				"number":    {Value: "{{.v2}}"},
+				"bool":      {Value: "{{.v3}}"},
+				"null":      {Value: "{{.v4}}"},
+				"obj":       {Value: "{{.v5}}"},
+				"unknown":   {Value: "{{.unknown}}"},
+				"rawStr":    {Value: "raw"},
+				"rawNumber": {Value: 13},
+				"rawBool":   {Value: true},
+				"rawNull":   {Value: nil},
+			},
+		})
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		expected := map[string]interface{}{
+			"result": map[string]model.CamundaVariable{
+				"templ": {Value: "{{placeholder}}"},
+				"str":   {Value: "str"},
+				//"strJson":   {Value: `"str"`},
+				"number":    {Value: "42"},
+				"bool":      {Value: "true"},
+				"null":      {Value: "null"},
+				"obj":       {Value: `{"batz":42,"foo":"bar"}`},
+				"unknown":   {Value: ""},
+				"rawStr":    {Value: "raw"},
+				"rawNumber": {Value: 13},
+				"rawBool":   {Value: true},
+				"rawNull":   {Value: nil},
+			},
+		}
+
+		if !reflect.DeepEqual(outputs, expected) {
+			t.Errorf("\n%#v\n%#v", outputs, expected)
+		}
 	})
 
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	expected := map[string]interface{}{
-		"result": map[string]model.CamundaVariable{
-			"templ": {Value: "{{placeholder}}"},
-			"str":   {Value: "str"},
-			//"strJson":   {Value: `"str"`},
-			"number":    {Value: "42"},
-			"bool":      {Value: "true"},
-			"null":      {Value: "null"},
-			"obj":       {Value: `{"batz":42,"foo":"bar"}`},
-			"unknown":   {Value: ""},
-			"rawStr":    {Value: "raw"},
-			"rawNumber": {Value: 13},
-			"rawBool":   {Value: true},
-			"rawNull":   {Value: nil},
-		},
-	}
+	t.Run("check script error handling", func(t *testing.T) {
+		err = testDb.SetDevice(context.Background(), models.Device{
+			Id:           "device1",
+			LocalId:      "device1lid",
+			Name:         "device1name",
+			Attributes:   nil,
+			DeviceTypeId: "dtid",
+		})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		sec.Set("devices", "device1", true)
 
-	if !reflect.DeepEqual(outputs, expected) {
-		t.Errorf("\n%#v\n%#v", outputs, expected)
-	}
+		t.Run("ok, no error check", func(t *testing.T) {
+			_, outputs, err := middleware.Do(model.CamundaExternalTask{
+				ProcessInstanceId: "test-instance",
+				Variables: map[string]model.CamundaVariable{
+					PreScriptPrefix + "_1": {
+						Value: `
+					var result_as_Device = deviceRepo.readDevice("device1");
+					outputs.set("device_name", result_as_Device.name);`,
+					},
+				},
+			})
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if outputs["device_name"] != "device1name" {
+				t.Errorf("%#v\n", outputs)
+				return
+			}
+		})
+
+		t.Run("unknown device, no error check", func(t *testing.T) {
+			_, _, err = middleware.Do(model.CamundaExternalTask{
+				Variables: map[string]model.CamundaVariable{
+					PreScriptPrefix + "_1": {
+						Value: `var result_as_Device = deviceRepo.readDevice("unknown");`,
+					},
+				},
+			})
+
+			if err == nil {
+				t.Error("expected error")
+				return
+			}
+		})
+
+		t.Run("null device-id, no error check", func(t *testing.T) {
+			_, _, err = middleware.Do(model.CamundaExternalTask{
+				Variables: map[string]model.CamundaVariable{
+					PreScriptPrefix + "_1": {
+						Value: `var result_as_Device = deviceRepo.readDevice(null);`,
+					},
+				},
+			})
+
+			if err == nil {
+				t.Error("expected error")
+				return
+			}
+		})
+
+		t.Run("null ref, no error check", func(t *testing.T) {
+			_, _, err = middleware.Do(model.CamundaExternalTask{
+				Variables: map[string]model.CamundaVariable{
+					PreScriptPrefix + "_1": {
+						Value: `
+							var result_as_Device = null;
+							outputs.set("device_name", result_as_Device.name)`,
+					},
+				},
+			})
+
+			if err == nil {
+				t.Error("expected error")
+				return
+			}
+		})
+
+		t.Run("unknown device, try-catch", func(t *testing.T) {
+			_, outputs, err := middleware.Do(model.CamundaExternalTask{
+				Variables: map[string]model.CamundaVariable{
+					PreScriptPrefix + "_1": {
+						Value: `
+					try{
+						var result_as_Device = deviceRepo.readDevice("unknown");
+						outputs.set("device_name", result_as_Device.name);
+					} catch (error) {
+						outputs.set("error", error);
+					}`,
+					},
+				},
+			})
+
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			if _, ok := outputs["error"]; !ok {
+				t.Errorf("%#v\n", outputs)
+				return
+			}
+		})
+	})
 }
 
 func TestMiddlewareScripts(t *testing.T) {
