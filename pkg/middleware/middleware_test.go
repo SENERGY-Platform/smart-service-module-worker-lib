@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"github.com/SENERGY-Platform/device-repository/lib/client"
+	deviceRepoModel "github.com/SENERGY-Platform/device-repository/lib/model"
 	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
@@ -51,13 +52,14 @@ func TestMiddleware(t *testing.T) {
 		}, nil
 	}}
 
-	testIotClient, testDb, sec, err := client.NewTestClient()
+	testIotClient, testDb, err := client.NewTestClient()
 	if err != nil {
 		t.Error(err)
 		return
 	}
+	sec := testDb
 
-	middleware := New(handler, repo, AuthMock("test-token"), testIotClient)
+	middleware := New(handler, repo, AuthMock, testIotClient)
 
 	t.Run("check placeholder substitution", func(t *testing.T) {
 		_, outputs, err := middleware.Do(model.CamundaExternalTask{
@@ -115,7 +117,17 @@ func TestMiddleware(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		sec.Set("devices", "device1", true)
+		err = sec.SetRights("devices", "device1", deviceRepoModel.ResourceRights{
+			UserRights: map[string]deviceRepoModel.Right{},
+			GroupRights: map[string]deviceRepoModel.Right{
+				"user":  {Read: true, Write: true, Execute: true, Administrate: true},
+				"admin": {Read: true, Write: true, Execute: true, Administrate: true},
+			},
+		})
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 		t.Run("ok, no error check", func(t *testing.T) {
 			_, outputs, err := middleware.Do(model.CamundaExternalTask{
@@ -253,7 +265,7 @@ func TestMiddlewareScripts(t *testing.T) {
 			return nil
 		},
 	}
-	testIotClient, _, _, err := client.NewTestClient()
+	testIotClient, _, err := client.NewTestClient()
 	if err != nil {
 		t.Error(err)
 		return
@@ -343,12 +355,10 @@ func (this *VariablesRepoMock) GetVariables(processId string) (result map[string
 	return this.GetVariablesFunc(processId)
 }
 
-type AuthMock string
+type AuthMockType string
 
-func (this AuthMock) ExchangeUserToken(userid string) (token auth.Token, err error) {
-	return auth.Token{
-		Token:       string(this),
-		Sub:         "",
-		RealmAccess: nil,
-	}, nil
+const AuthMock AuthMockType = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwOGM0N2E4OC0yYzc5LTQyMGYtODEwNC02NWJkOWViYmU0MWUiLCJleHAiOjE1NDY1MDcyMzMsIm5iZiI6MCwiaWF0IjoxNTQ2NTA3MTczLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDEvYXV0aC9yZWFsbXMvbWFzdGVyIiwiYXVkIjoiZnJvbnRlbmQiLCJzdWIiOiJ0ZXN0T3duZXIiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJmcm9udGVuZCIsIm5vbmNlIjoiOTJjNDNjOTUtNzViMC00NmNmLTgwYWUtNDVkZDk3M2I0YjdmIiwiYXV0aF90aW1lIjoxNTQ2NTA3MDA5LCJzZXNzaW9uX3N0YXRlIjoiNWRmOTI4ZjQtMDhmMC00ZWI5LTliNjAtM2EwYWUyMmVmYzczIiwiYWNyIjoiMCIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJ1c2VyIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsibWFzdGVyLXJlYWxtIjp7InJvbGVzIjpbInZpZXctcmVhbG0iLCJ2aWV3LWlkZW50aXR5LXByb3ZpZGVycyIsIm1hbmFnZS1pZGVudGl0eS1wcm92aWRlcnMiLCJpbXBlcnNvbmF0aW9uIiwiY3JlYXRlLWNsaWVudCIsIm1hbmFnZS11c2VycyIsInF1ZXJ5LXJlYWxtcyIsInZpZXctYXV0aG9yaXphdGlvbiIsInF1ZXJ5LWNsaWVudHMiLCJxdWVyeS11c2VycyIsIm1hbmFnZS1ldmVudHMiLCJtYW5hZ2UtcmVhbG0iLCJ2aWV3LWV2ZW50cyIsInZpZXctdXNlcnMiLCJ2aWV3LWNsaWVudHMiLCJtYW5hZ2UtYXV0aG9yaXphdGlvbiIsIm1hbmFnZS1jbGllbnRzIiwicXVlcnktZ3JvdXBzIl19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJyb2xlcyI6WyJ1c2VyIl19.ykpuOmlpzj75ecSI6cHbCATIeY4qpyut2hMc1a67Ycg`
+
+func (this AuthMockType) ExchangeUserToken(userid string) (token auth.Token, err error) {
+	return auth.Parse(string(this))
 }

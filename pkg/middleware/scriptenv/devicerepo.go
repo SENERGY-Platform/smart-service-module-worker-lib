@@ -49,7 +49,8 @@ func (this *ScriptEnvDeviceRepo) ReadDeviceByLocalId(localId string) models.Devi
 			panic(this.env.GetVm().ToValue(caught))
 		}
 	}()
-	result, err, _ := this.env.iotClient.ReadDeviceByLocalId(localId, this.env.getToken(), model.READ)
+	//device-repository replaces ownerId="" with the requesting user id
+	result, err, _ := this.env.iotClient.ReadDeviceByLocalId("", localId, this.env.getToken(), model.READ)
 	if err != nil {
 		panic(fmt.Errorf("error in ReadDeviceByLocalId(%#v): %v", localId, err))
 	}
