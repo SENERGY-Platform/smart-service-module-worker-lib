@@ -258,9 +258,9 @@ func (this *ScriptEnvDeviceRepo) GetLeafCharacteristics() []models.Characteristi
 			panic(this.env.GetVm().ToValue(caught))
 		}
 	}()
-	result, err, _ := this.env.iotClient.GetLeafCharacteristics()
+	result, err, _ := this.env.iotClient.GetCharacteristics(true)
 	if err != nil {
-		panic(fmt.Errorf("error in GetLeafCharacteristics(): %v", err))
+		panic(fmt.Errorf("error in GetCharacteristics(true): %v", err))
 	}
 	return result
 }

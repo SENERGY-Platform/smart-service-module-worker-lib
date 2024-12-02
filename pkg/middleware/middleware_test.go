@@ -106,12 +106,14 @@ func TestMiddleware(t *testing.T) {
 	})
 
 	t.Run("check script error handling", func(t *testing.T) {
-		err = testDb.SetDevice(context.Background(), models.Device{
-			Id:           "device1",
-			LocalId:      "device1lid",
-			Name:         "device1name",
-			Attributes:   nil,
-			DeviceTypeId: "dtid",
+		err = testDb.SetDevice(context.Background(), deviceRepoModel.DeviceWithConnectionState{
+			Device: models.Device{
+				Id:           "device1",
+				LocalId:      "device1lid",
+				Name:         "device1name",
+				Attributes:   nil,
+				DeviceTypeId: "dtid",
+			},
 		})
 		if err != nil {
 			t.Error(err)
