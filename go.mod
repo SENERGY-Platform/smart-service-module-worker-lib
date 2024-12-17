@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.3
 
 require (
-	github.com/SENERGY-Platform/device-repository v0.1.36
+	github.com/SENERGY-Platform/device-repository v0.1.51
 	github.com/SENERGY-Platform/models/go v0.0.0-20241007061544-de7132ae94e4
 	github.com/dop251/goja v0.0.0-20240627195025-eb1f15ee67d2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -19,7 +19,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.4 // indirect
-	github.com/SENERGY-Platform/permissions-v2 v0.0.26 // indirect
+	github.com/SENERGY-Platform/permissions-v2 v0.0.27 // indirect
 	github.com/SENERGY-Platform/service-commons v0.0.0-20240813072046-91b3195dd8fc // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
