@@ -36,7 +36,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config,
 	if err != nil {
 		return err
 	}
-	m := middleware.New(handler, smartServiceRepo, auth, client.NewClient(config.DeviceRepositoryUrl))
+	m := middleware.New(handler, smartServiceRepo, auth, client.NewClient(config.DeviceRepositoryUrl, nil))
 	camunda.Start(ctx, wg, config, smartServiceRepo, m)
 	return nil
 }
