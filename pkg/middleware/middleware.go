@@ -17,24 +17,26 @@
 package middleware
 
 import (
-	"github.com/SENERGY-Platform/device-repository/lib/client"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/references"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/scriptenv"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
-	"log"
 	"runtime/debug"
 	"sort"
 	"strings"
+
+	"github.com/SENERGY-Platform/device-repository/lib/client"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/references"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/scriptenv"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
-func New(handler camunda.Handler, repo VariablesRepo, auth Auth, iotClient client.Interface) *Middleware {
+func New(config configuration.Config, handler camunda.Handler, repo VariablesRepo, auth Auth, iotClient client.Interface) *Middleware {
 	return &Middleware{
 		handler:   handler,
 		repo:      repo,
 		auth:      auth,
 		iotClient: iotClient,
+		config:    config,
 	}
 }
 
@@ -43,6 +45,7 @@ type Middleware struct {
 	repo      VariablesRepo
 	auth      Auth
 	iotClient client.Interface
+	config    configuration.Config
 }
 
 type Auth interface {
@@ -58,14 +61,12 @@ type VariablesRepo interface {
 func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
 	userId, err := this.repo.GetInstanceUser(task.ProcessInstanceId)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
 	variables, err := this.repo.GetVariables(task.ProcessInstanceId)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
 	inputs := map[string]interface{}{}
@@ -74,8 +75,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	variableChanges, outputs, err := this.RunPreScripts(userId, inputs, variables)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
 	for key, value := range variableChanges {
@@ -83,14 +83,12 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	task.Variables, err = references.Handle(task.Variables, variables)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
 	modules, handlerOutputs, err := this.handler.Do(task)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, handlerOutputs, err
 	}
 	for key, value := range handlerOutputs {
@@ -98,8 +96,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	postVarChanges, postOutputs, err := this.RunPostScripts(userId, inputs, outputs, variables)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, handlerOutputs, err
 	}
 	for key, value := range postVarChanges {
@@ -111,8 +108,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	if len(variableChanges) > 0 {
 		err = this.repo.SetVariables(task.ProcessInstanceId, variableChanges)
 		if err != nil {
-			log.Println("ERROR:", err)
-			debug.PrintStack()
+			this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 			return modules, outputs, err
 		}
 	}

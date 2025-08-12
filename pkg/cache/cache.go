@@ -19,9 +19,10 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"github.com/patrickmn/go-cache"
 	"log"
 	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
 type Cache struct {
@@ -66,7 +67,7 @@ func (this *Cache) Use(key string, expiration time.Duration, getter func() (inte
 	if err == nil {
 		err = json.Unmarshal(value, result)
 		return
-	} else if err != ErrNotFound {
+	} else if !errors.Is(err, ErrNotFound) {
 		log.Println("WARNING: err in LocalCache::cache.Get()", err)
 	}
 	temp, err := getter()
@@ -86,7 +87,7 @@ func (this *Cache) UseWithExpirationInResult(key string, getter func() (interfac
 	if err == nil {
 		err = json.Unmarshal(value, result)
 		return
-	} else if err != ErrNotFound {
+	} else if !errors.Is(err, ErrNotFound) {
 		log.Println("WARNING: err in cache.Get()", err)
 	}
 	temp, expiration, err := getter()

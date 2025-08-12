@@ -1,8 +1,8 @@
 module github.com/SENERGY-Platform/smart-service-module-worker-lib
 
-go 1.23
+go 1.24.0
 
-toolchain go1.23.3
+toolchain go1.24.6
 
 require (
 	github.com/SENERGY-Platform/device-repository v0.1.52
@@ -19,6 +19,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.4 // indirect
+	github.com/SENERGY-Platform/go-service-base/struct-logger v0.4.1 // indirect
 	github.com/SENERGY-Platform/permissions-v2 v0.0.27 // indirect
 	github.com/SENERGY-Platform/service-commons v0.0.0-20240813072046-91b3195dd8fc // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect

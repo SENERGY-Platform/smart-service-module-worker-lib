@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -45,7 +44,7 @@ func (this *Auth) exchangeUserToken(userid string) (token Token, expiration time
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		log.Println("ERROR: GetUserToken()", resp.StatusCode, string(body))
+		this.config.GetLogger().Error("error in GetUserToken()", "statuscode", resp.StatusCode, "response", string(body))
 		err = errors.New("access denied")
 		resp.Body.Close()
 		return

@@ -19,11 +19,11 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 )
 
 func (this *Auth) Ensure() (token Token, err error) {
@@ -41,19 +41,19 @@ func (this *Auth) Ensure() (token Token, err error) {
 
 	// subtract 5 seconds from expiration as a buffer
 	if this.openid.RefreshToken != "" && this.openid.RefreshExpiresIn-buffer > duration {
-		log.Println("refresh token", this.openid.RefreshExpiresIn, duration)
+		this.config.GetLogger().Debug("refresh token", "duration", duration, "refresh-expires-in", this.openid.RefreshExpiresIn)
 		err = refreshOpenidToken(this.openid, this.config)
 		if err != nil {
-			log.Println("WARNING: unable to use refresh-token", err)
+			this.config.GetLogger().Warn("unable to use refresh-token", "error", err)
 		} else {
 			return this.openid.ParsedToken, nil
 		}
 	}
 
-	log.Println("get new access token")
+	this.config.GetLogger().Debug("get new access token")
 	err = getOpenidToken(this.openid, this.config)
 	if err != nil {
-		log.Println("ERROR: unable to get new access token", err)
+		this.config.GetLogger().Error("unable to get new access token", "error", err)
 		this.openid = &OpenidToken{}
 	}
 	return this.openid.ParsedToken, nil
@@ -68,12 +68,12 @@ func getOpenidToken(token *OpenidToken, config configuration.Config) (err error)
 	})
 
 	if err != nil {
-		log.Println("ERROR: getOpenidToken::PostForm()", err)
+		config.GetLogger().Error("error in getOpenidToken::PostForm()", "error", err)
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		log.Println("ERROR: getOpenidToken()", resp.StatusCode, string(body))
+		config.GetLogger().Error("error in getOpenidToken()", "statuscode", resp.StatusCode, "response", string(body))
 		err = errors.New("access denied")
 		resp.Body.Close()
 		return
@@ -101,7 +101,7 @@ func refreshOpenidToken(token *OpenidToken, config configuration.Config) (err er
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		log.Println("ERROR: refreshOpenidToken()", resp.StatusCode, string(body))
+		config.GetLogger().Error("error in refreshOpenidToken()", "statuscode", resp.StatusCode, "response", string(body))
 		err = errors.New("access denied")
 		resp.Body.Close()
 		return

@@ -19,14 +19,15 @@ package middleware
 import (
 	"context"
 	"errors"
+	"reflect"
+	"testing"
+
 	"github.com/SENERGY-Platform/device-repository/lib/client"
 	deviceRepoModel "github.com/SENERGY-Platform/device-repository/lib/model"
 	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
-	"reflect"
-	"testing"
 )
 
 func TestMiddleware(t *testing.T) {
@@ -59,7 +60,7 @@ func TestMiddleware(t *testing.T) {
 	}
 	sec := testDb
 
-	middleware := New(handler, repo, AuthMock, testIotClient)
+	middleware := New(configuration.Config{}, handler, repo, AuthMock, testIotClient)
 
 	t.Run("check placeholder substitution", func(t *testing.T) {
 		_, outputs, err := middleware.Do(model.CamundaExternalTask{
@@ -273,7 +274,7 @@ func TestMiddlewareScripts(t *testing.T) {
 		return
 	}
 
-	middleware := New(handler, repo, auth.New(configuration.Config{}), testIotClient)
+	middleware := New(configuration.Config{}, handler, repo, auth.New(configuration.Config{}), testIotClient)
 
 	_, outputs, err := middleware.Do(model.CamundaExternalTask{
 		Variables: map[string]model.CamundaVariable{

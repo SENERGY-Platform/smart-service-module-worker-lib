@@ -22,15 +22,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
+	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
 func New(config configuration.Config, smartServiceRepo SmartServiceRepository, handler Handler) *Camunda {
@@ -83,7 +84,7 @@ func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) {
 func (this *Camunda) executeNextTasks() (wait bool) {
 	tasks, err := this.getTasks()
 	if err != nil {
-		log.Println("error on ExecuteNextTasks getTask", err)
+		this.config.GetLogger().Error("error on ExecuteNextTasks getTask", "error", err)
 		return true
 	}
 	if len(tasks) == 0 {
@@ -102,13 +103,12 @@ func (this *Camunda) executeNextTasks() (wait bool) {
 			if err != nil {
 				//undo module and retry after lock duration
 				this.handler.Undo(modules, err)
-				log.Println("ERROR", err)
+				this.config.GetLogger().Error("error on executeNextTasks getTask", "error", err)
 				debug.PrintStack()
 			} else {
 				err = this.completeTask(task.Id, outputs)
 				if err != nil {
-					log.Println("ERROR", err)
-					debug.PrintStack()
+					this.config.GetLogger().Error("error on executeNextTasks getTask", "error", err, "stack", string(debug.Stack()))
 					this.handler.Undo(modules, err)
 					repoErr := this.smartServiceRepo.SendWorkerError(task, err)
 					if repoErr == nil {
@@ -152,7 +152,7 @@ func (this *Camunda) getTasks() (tasks []model.CamundaExternalTask, err error) {
 }
 
 func (this *Camunda) completeTask(taskId string, outputs map[string]interface{}) (err error) {
-	log.Println("Start complete Request")
+	this.config.GetLogger().Debug("complete task", "taskId", taskId, "outputs", outputs)
 	client := http.Client{Timeout: 5 * time.Second}
 
 	variables := map[string]model.CamundaVariable{}
@@ -171,16 +171,16 @@ func (this *Camunda) completeTask(taskId string, outputs map[string]interface{})
 		return err
 	}
 	defer resp.Body.Close()
-	pl, err := ioutil.ReadAll(resp.Body)
+	pl, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
 	if resp.StatusCode >= 300 {
-		log.Println("ERROR: unable to complete task:", resp.StatusCode, string(pl))
+		this.config.GetLogger().Error("unable to complete task", "statuscode", resp.StatusCode, "response", string(pl))
 		return fmt.Errorf("unable to complete task: %v, %v", resp.StatusCode, string(pl))
 	} else {
-		log.Println("complete camunda task: ", completeRequest, string(pl))
+		this.config.GetLogger().Debug("complete camunda task", "request", completeRequest, "response", string(pl))
 	}
 	return nil
 }
@@ -202,7 +202,7 @@ func (this *Camunda) stopProcessInstance(id string) (err error) {
 	if resp.StatusCode == 200 || resp.StatusCode == 204 {
 		return nil
 	}
-	msg, _ := ioutil.ReadAll(resp.Body)
+	msg, _ := io.ReadAll(resp.Body)
 	err = errors.New("error on delete in engine for /engine-rest/process-instance/" + url.PathEscape(id) + ": " + resp.Status + " " + string(msg))
 	return err
 }

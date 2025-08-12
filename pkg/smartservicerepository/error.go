@@ -20,20 +20,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
+
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
 func (this *SmartServiceRepository) SendWorkerError(task model.CamundaExternalTask, errMsg error) error {
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(this.config.CamundaWorkerTopic + ": " + errMsg.Error())
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in SmartServiceRepository.SendWorkerError", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(task.ProcessInstanceId)+"/error", body)

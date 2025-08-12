@@ -21,12 +21,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
+
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
 func (this *SmartServiceRepository) SendWorkerModules(modules []model.Module) (result []model.SmartServiceModule, err error) {
@@ -44,8 +44,7 @@ func (this *SmartServiceRepository) SendWorkerModule(module model.Module) (resul
 	body := new(bytes.Buffer)
 	err = json.NewEncoder(body).Encode(module.SmartServiceModuleInit)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in SmartServiceRepository.SendWorkerModule", "error", err, "stack", string(debug.Stack()))
 		return result, err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(module.ProcesInstanceId)+"/modules/"+url.PathEscape(module.Id), body)
@@ -95,8 +94,7 @@ func (this *SmartServiceRepository) UseModuleDeleteInfo(info model.ModuleDeleteI
 	if resp.StatusCode >= 300 && resp.StatusCode != http.StatusNotFound {
 		temp, _ := io.ReadAll(resp.Body)
 		err = fmt.Errorf("unexpected response: %v, %v", resp.StatusCode, string(temp))
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in SmartServiceRepository.UseModuleDeleteInfo", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	_, _ = io.ReadAll(resp.Body)

@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -59,8 +58,7 @@ func (this *SmartServiceRepository) SetVariables(processId string, variableChang
 	body := new(bytes.Buffer)
 	err = json.NewEncoder(body).Encode(variableChanges)
 	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
+		this.config.GetLogger().Error("error in SmartServiceRepository.SetVariables", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processId)+"/variables-map", body)

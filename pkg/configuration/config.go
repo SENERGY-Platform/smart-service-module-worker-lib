@@ -19,11 +19,16 @@ package configuration
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"reflect"
 	"regexp"
+	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
+
+	struct_logger "github.com/SENERGY-Platform/go-service-base/struct-logger"
 )
 
 type Config struct {
@@ -39,6 +44,9 @@ type Config struct {
 	AuthClientId                         string `json:"auth_client_id" config:"secret"`
 	AuthClientSecret                     string `json:"auth_client_secret" config:"secret"`
 	TokenCacheDefaultExpirationInSeconds int    `json:"token_cache_default_expiration_in_seconds"`
+
+	LogLevel string       `json:"log_level"`
+	logger   *slog.Logger `json:"-"`
 }
 
 func LoadLibConfig(location string) (config Config, err error) {
@@ -121,4 +129,28 @@ func handleEnvironmentVars[T any](config *T) {
 			}
 		}
 	}
+}
+
+func (this *Config) GetLogger() *slog.Logger {
+	if this.logger == nil {
+		info, ok := debug.ReadBuildInfo()
+		project := ""
+		if ok {
+			if parts := strings.Split(info.Main.Path, "/"); len(parts) > 2 {
+				project = strings.Join(parts[2:], "/")
+			}
+		}
+		this.logger = struct_logger.New(
+			struct_logger.Config{
+				Handler:    struct_logger.JsonHandlerSelector,
+				Level:      this.LogLevel,
+				TimeFormat: time.RFC3339Nano,
+				TimeUtc:    true,
+				AddMeta:    true,
+			},
+			os.Stdout,
+			"",
+			project).With("project-group", "smart-service")
+	}
+	return this.logger
 }

@@ -18,13 +18,14 @@ package pkg
 
 import (
 	"context"
+	"sync"
+
 	"github.com/SENERGY-Platform/device-repository/lib/client"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/smartservicerepository"
-	"sync"
 )
 
 type HandlerFactory = func(auth *auth.Auth, smartServiceRepo *smartservicerepository.SmartServiceRepository) (camunda.Handler, error)
@@ -36,7 +37,7 @@ func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config,
 	if err != nil {
 		return err
 	}
-	m := middleware.New(handler, smartServiceRepo, auth, client.NewClient(config.DeviceRepositoryUrl, nil))
+	m := middleware.New(config, handler, smartServiceRepo, auth, client.NewClient(config.DeviceRepositoryUrl, nil))
 	camunda.Start(ctx, wg, config, smartServiceRepo, m)
 	return nil
 }
