@@ -135,9 +135,11 @@ func (this *Config) GetLogger() *slog.Logger {
 	if this.logger == nil {
 		info, ok := debug.ReadBuildInfo()
 		project := ""
+		org := ""
 		if ok {
 			if parts := strings.Split(info.Main.Path, "/"); len(parts) > 2 {
 				project = strings.Join(parts[2:], "/")
+				org = strings.Join(parts[:2], "/")
 			}
 		}
 		this.logger = struct_logger.New(
@@ -149,8 +151,9 @@ func (this *Config) GetLogger() *slog.Logger {
 				AddMeta:    true,
 			},
 			os.Stdout,
-			"",
-			project).With("project-group", "smart-service")
+			org,
+			project,
+		).With("project-group", "smart-service")
 	}
 	return this.logger
 }
