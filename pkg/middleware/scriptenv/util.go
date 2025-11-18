@@ -19,6 +19,7 @@ package scriptenv
 import (
 	"encoding/json"
 	"errors"
+
 	devicemodel "github.com/SENERGY-Platform/device-repository/lib/model"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/util"
@@ -30,6 +31,16 @@ type ScriptEnvUtil struct {
 
 func NewScriptEnvUtil(env *ScriptEnv) *ScriptEnvUtil {
 	return &ScriptEnvUtil{env: env}
+}
+
+// GetUserId returns the user-id of the executing user
+func (this *ScriptEnvUtil) GetUserId() string {
+	return this.env.userId
+}
+
+// GetUserToken returns a jwt-token for the executing user
+func (this *ScriptEnvUtil) GetUserToken() string {
+	return this.env.getToken()
 }
 
 // GetDevicesWithServiceFromIotOption finds a list of iot-options where the entity is the same the input, but the Service field is set with those that match the input criteria

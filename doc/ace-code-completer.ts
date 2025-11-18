@@ -212,6 +212,16 @@ const completer = {
     meta: 'static'
 },
 {
+    caption: 'util.getUserId',
+    value: 'var result_as_string = util.getUserId();',
+    meta: 'static'
+},
+{
+    caption: 'util.getUserToken',
+    value: 'var result_as_string = util.getUserToken();',
+    meta: 'static'
+},
+{
     caption: 'util.groupIotOptionsByDevice',
     value: 'var result_as_IotOption_list_map = util.groupIotOptionsByDevice(entities_as_IotOption_list);',
     meta: 'static'
@@ -482,6 +492,16 @@ const completer = {
 {
     caption: 'util.getDevicesWithServiceFromIotOption',
     value: 'util.getDevicesWithServiceFromIotOption(entity_as_IotOption, criteria_as_FilterCriteria_list)',
+    meta: 'static'
+},
+{
+    caption: 'util.getUserId',
+    value: 'util.getUserId()',
+    meta: 'static'
+},
+{
+    caption: 'util.getUserToken',
+    value: 'util.getUserToken()',
     meta: 'static'
 },
 {
