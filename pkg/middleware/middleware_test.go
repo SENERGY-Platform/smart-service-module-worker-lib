@@ -17,13 +17,11 @@
 package middleware
 
 import (
-	"context"
 	"errors"
 	"reflect"
 	"testing"
 
 	"github.com/SENERGY-Platform/device-repository/lib/client"
-	deviceRepoModel "github.com/SENERGY-Platform/device-repository/lib/model"
 	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
@@ -53,12 +51,11 @@ func TestMiddleware(t *testing.T) {
 		}, nil
 	}}
 
-	testIotClient, testDb, err := client.NewTestClient()
+	testIotClient, _, err := client.NewTestClient()
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	sec := testDb
 
 	middleware := New(configuration.Config{}, handler, repo, AuthMock, testIotClient)
 
@@ -107,26 +104,44 @@ func TestMiddleware(t *testing.T) {
 	})
 
 	t.Run("check script error handling", func(t *testing.T) {
-		err = testDb.SetDevice(context.Background(), deviceRepoModel.DeviceWithConnectionState{
-			Device: models.Device{
-				Id:           "device1",
-				LocalId:      "device1lid",
-				Name:         "device1name",
-				Attributes:   nil,
-				DeviceTypeId: "dtid",
-			},
+
+		_, err, _ = testIotClient.SetProtocol(client.InternalAdminToken, models.Protocol{
+			Id:      "p1",
+			Name:    "p1",
+			Handler: "p1",
+			ProtocolSegments: []models.ProtocolSegment{{
+				Id:   "ps1",
+				Name: "ps1",
+			}},
 		})
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		err = sec.SetRights("devices", "device1", deviceRepoModel.ResourceRights{
-			UserRights: map[string]deviceRepoModel.Right{},
-			GroupRights: map[string]deviceRepoModel.Right{
-				"user":  {Read: true, Write: true, Execute: true, Administrate: true},
-				"admin": {Read: true, Write: true, Execute: true, Administrate: true},
-			},
-		})
+
+		_, err, _ = testIotClient.SetDeviceType(client.InternalAdminToken, models.DeviceType{
+			Id:   "dtid",
+			Name: "dtid",
+			Services: []models.Service{{
+				LocalId:     "s1",
+				Name:        "s1",
+				Interaction: models.REQUEST,
+				ProtocolId:  "p1",
+			}},
+		}, client.DeviceTypeUpdateOptions{})
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		_, err, _ = testIotClient.SetDevice(client.InternalAdminToken, models.Device{
+			Id:           "device1",
+			LocalId:      "device1lid",
+			Name:         "device1name",
+			Attributes:   nil,
+			DeviceTypeId: "dtid",
+			OwnerId:      "testOwner",
+		}, client.DeviceUpdateOptions{})
 		if err != nil {
 			t.Error(err)
 			return

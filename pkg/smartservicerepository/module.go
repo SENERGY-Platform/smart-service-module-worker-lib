@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime/debug"
+	"strconv"
 
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
@@ -115,6 +116,52 @@ func (this *SmartServiceRepository) ListExistingModules(processInstanceId string
 	}
 
 	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processInstanceId)+"/modules"+queryStr, nil)
+	if err != nil {
+		return result, err
+	}
+	token, err := this.auth.Ensure()
+	if err != nil {
+		return result, err
+	}
+	req.Header.Set("Authorization", token.Jwt())
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return result, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		temp, _ := io.ReadAll(resp.Body)
+		err = errors.New(string(temp))
+		return result, err
+	}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return result, err
+	}
+	return result, nil
+}
+
+func (this *SmartServiceRepository) ListModules(query model.ModulQuery) (result []model.SmartServiceModule, err error) {
+	queryValues := url.Values{}
+	if query.KeyFilter != nil {
+		queryValues.Set("key", *query.KeyFilter)
+	}
+	if query.TypeFilter != nil {
+		queryValues.Set("module_type", *query.TypeFilter)
+	}
+	if query.Limit > 0 {
+		queryValues.Set("limit", strconv.FormatInt(query.Limit, 10))
+	}
+	if query.Offset > 0 {
+		queryValues.Set("offset", strconv.FormatInt(query.Offset, 10))
+	}
+
+	queryStr := ""
+	if len(queryValues) > 0 {
+		queryStr = "?" + queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/modules"+queryStr, nil)
 	if err != nil {
 		return result, err
 	}

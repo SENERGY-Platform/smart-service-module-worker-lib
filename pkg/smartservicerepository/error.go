@@ -58,3 +58,34 @@ func (this *SmartServiceRepository) SendWorkerError(task model.CamundaExternalTa
 	_, _ = io.ReadAll(resp.Body)
 	return nil
 }
+
+func (this *SmartServiceRepository) SetSmartServiceError(smartServiceId string, errMsg error) error {
+	body := new(bytes.Buffer)
+	err := json.NewEncoder(body).Encode(this.config.CamundaWorkerTopic + ": " + errMsg.Error())
+	if err != nil {
+		this.config.GetLogger().Error("error in SmartServiceRepository.SetSmartServiceError", "error", err, "stack", string(debug.Stack()))
+		return err
+	}
+	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances/"+url.PathEscape(smartServiceId)+"/error", body)
+	if err != nil {
+		return err
+	}
+	token, err := this.auth.Ensure()
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", token.Jwt())
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		temp, _ := io.ReadAll(resp.Body)
+		err = errors.New(string(temp))
+		return err
+	}
+	_, _ = io.ReadAll(resp.Body)
+	return nil
+}

@@ -82,4 +82,6 @@ type SmartServiceParameter struct {
 type ModulQuery struct {
 	KeyFilter  *string
 	TypeFilter *string
+	Limit      int64
+	Offset     int64
 }
