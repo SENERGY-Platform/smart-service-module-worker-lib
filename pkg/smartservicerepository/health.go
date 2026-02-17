@@ -45,6 +45,10 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 		query.Offset = offset
 		return this.ListModules(query)
 	}) {
+		if module.LastUpdate > 0 && time.Since(time.Unix(module.LastUpdate, 0)) < time.Hour {
+			//ignore modules that were updated in the last hour
+			continue
+		}
 		health, err := check(module)
 		if err != nil {
 			this.config.GetLogger().Error("error in health check", "error", err, "module", module)
