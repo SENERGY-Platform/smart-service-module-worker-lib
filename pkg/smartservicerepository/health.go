@@ -54,11 +54,17 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 			this.config.GetLogger().Error("error in health check", "error", err, "module", module)
 			continue
 		}
-		if health != nil {
-			err = this.SetSmartServiceError(module.InstanceId, health)
+		if health != nil && module.Error == "" {
+			err = this.SetSmartServiceModuleError(module.Id, health)
 			if err != nil {
 				this.config.GetLogger().Error("error in health check", "error", err, "module", module)
 				continue
+			}
+		}
+		if health == nil && module.Error != "" {
+			err = this.RemoveSmartServiceModuleError(module.Id)
+			if err != nil {
+				this.config.GetLogger().Error("error in health check", "error", err, "module", module)
 			}
 		}
 	}

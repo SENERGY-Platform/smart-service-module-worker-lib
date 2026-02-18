@@ -34,6 +34,7 @@ type SmartServiceModuleBase struct {
 	DesignId   string `json:"design_id" bson:"design_id"`
 	ReleaseId  string `json:"release_id" bson:"release_id"`
 	LastUpdate int64  `json:"last_update" bson:"last_update"`
+	Error      string `json:"error,omitempty" bson:"error"`
 }
 
 type SmartServiceModuleInit struct {

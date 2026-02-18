@@ -3,9 +3,10 @@ module github.com/SENERGY-Platform/smart-service-module-worker-lib
 go 1.25.0
 
 require (
-	github.com/SENERGY-Platform/device-repository v0.2.37
+	github.com/SENERGY-Platform/device-repository v0.2.39
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.6.0
 	github.com/SENERGY-Platform/models/go v0.0.0-20251202070403-e7e5579f7111
+	github.com/SENERGY-Platform/service-commons v0.0.0-20260106114257-16bca4ba28e7
 	github.com/dop251/goja v0.0.0-20240627195025-eb1f15ee67d2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -14,8 +15,7 @@ require (
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.4 // indirect
-	github.com/SENERGY-Platform/permissions-v2 v0.0.40 // indirect
-	github.com/SENERGY-Platform/service-commons v0.0.0-20260106114257-16bca4ba28e7 // indirect
+	github.com/SENERGY-Platform/permissions-v2 v0.0.41 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
