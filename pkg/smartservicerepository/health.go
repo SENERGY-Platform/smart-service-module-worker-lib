@@ -48,7 +48,9 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 	ill := 0
 	updatedAsHealthy := 0
 	updatedAsIll := 0
-	defer this.config.GetLogger().Info("finished health check", "modules", moduleCount, "checked", checked, "skipped", skipped, "healthy", healthy, "ill", ill, "updatedAsHealthy", updatedAsHealthy, "updatedAsIll", updatedAsIll)
+	defer func() {
+		this.config.GetLogger().Info("finished health check", "modules", moduleCount, "checked", checked, "skipped", skipped, "healthy", healthy, "ill", ill, "updatedAsHealthy", updatedAsHealthy, "updatedAsIll", updatedAsIll)
+	}()
 	for module := range util.IterBatch(100, func(limit int64, offset int64) ([]model.SmartServiceModule, error) {
 		query.Limit = limit
 		query.Offset = offset

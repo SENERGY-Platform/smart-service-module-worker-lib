@@ -18,13 +18,14 @@ package smartservicerepository
 
 import (
 	"encoding/json"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
 type AuthMockType string
@@ -78,6 +79,58 @@ func TestGetSmartServiceInstance(t *testing.T) {
 	config := configuration.Config{SmartServiceRepositoryUrl: server.URL}
 
 	result, err := New(config, AuthMock).GetSmartServiceInstance("my-process-instance-id")
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if !reflect.DeepEqual(result, expectedResult) {
+		t.Error(result)
+	}
+}
+
+func TestListModules(t *testing.T) {
+	expectedMethod := "GET"
+	expectedEndpoint := "/modules"
+	expectedResult := []model.SmartServiceModule{
+		{
+			SmartServiceModuleBase: model.SmartServiceModuleBase{
+				Id:         "module-id",
+				UserId:     "user",
+				InstanceId: "instance",
+				DesignId:   "design",
+				ReleaseId:  "release",
+			},
+			SmartServiceModuleInit: model.SmartServiceModuleInit{
+				ModuleType: "module-type",
+				Keys:       []string{"key1"},
+				ModuleData: map[string]interface{}{
+					"foo": "bar",
+				},
+			},
+		},
+	}
+	response, _ := json.Marshal(expectedResult)
+
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != expectedMethod {
+			t.Error(request.Method)
+		}
+		path := request.URL.Path
+		if request.URL.RawQuery != "" {
+			path = path + "?" + request.URL.RawQuery
+		}
+		if path != expectedEndpoint {
+			t.Error(path)
+		}
+		writer.Write(response)
+	}))
+
+	defer server.Close()
+
+	config := configuration.Config{SmartServiceRepositoryUrl: server.URL}
+
+	result, err := New(config, AuthMock).ListModules(model.ModulQuery{})
 
 	if err != nil {
 		t.Error(err)
