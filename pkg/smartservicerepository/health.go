@@ -40,21 +40,39 @@ func (this *SmartServiceRepository) StartHealthCheck(ctx context.Context, interv
 }
 
 func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check func(module model.SmartServiceModule) (health error, err error)) {
+	this.config.GetLogger().Info("run health check")
+	moduleCount := 0
+	checked := 0
+	skipped := 0
+	healthy := 0
+	ill := 0
+	updatedAsHealthy := 0
+	updatedAsIll := 0
+	defer this.config.GetLogger().Info("finished health check", "modules", moduleCount, "checked", checked, "skipped", skipped, "healthy", healthy, "ill", ill, "updatedAsHealthy", updatedAsHealthy, "updatedAsIll", updatedAsIll)
 	for module := range util.IterBatch(100, func(limit int64, offset int64) ([]model.SmartServiceModule, error) {
 		query.Limit = limit
 		query.Offset = offset
 		return this.ListModules(query)
 	}) {
+		moduleCount++
 		if module.LastUpdate > 0 && time.Since(time.Unix(module.LastUpdate, 0)) < time.Hour {
 			//ignore modules that were updated in the last hour
+			skipped++
 			continue
 		}
+		checked++
 		health, err := check(module)
 		if err != nil {
 			this.config.GetLogger().Error("error in health check", "error", err, "module", module)
 			continue
 		}
+		if health == nil {
+			healthy++
+		} else {
+			ill++
+		}
 		if health != nil && module.Error == "" {
+			updatedAsIll++
 			err = this.SetSmartServiceModuleError(module.Id, health)
 			if err != nil {
 				this.config.GetLogger().Error("error in health check", "error", err, "module", module)
@@ -62,6 +80,7 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 			}
 		}
 		if health == nil && module.Error != "" {
+			updatedAsHealthy++
 			err = this.RemoveSmartServiceModuleError(module.Id)
 			if err != nil {
 				this.config.GetLogger().Error("error in health check", "error", err, "module", module)

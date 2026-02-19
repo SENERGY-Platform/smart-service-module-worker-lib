@@ -91,6 +91,7 @@ func (this *SmartServiceRepository) SetSmartServiceError(smartServiceId string, 
 }
 
 func (this *SmartServiceRepository) SetSmartServiceModuleError(moduleId string, errMsg error) error {
+	this.config.GetLogger().Warn("set module error", "moduleId", moduleId, "error", errMsg)
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(this.config.CamundaWorkerTopic + ": " + errMsg.Error())
 	if err != nil {
@@ -122,6 +123,7 @@ func (this *SmartServiceRepository) SetSmartServiceModuleError(moduleId string, 
 }
 
 func (this *SmartServiceRepository) RemoveSmartServiceModuleError(moduleId string) error {
+	this.config.GetLogger().Warn("remove module error", "moduleId", moduleId)
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode("")
 	if err != nil {
