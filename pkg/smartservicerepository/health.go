@@ -73,7 +73,7 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 		} else {
 			ill++
 		}
-		if health != nil && module.Error == "" {
+		if health != nil {
 			updatedAsIll++
 			err = this.SetSmartServiceModuleError(module.Id, health)
 			if err != nil {
