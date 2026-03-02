@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -82,7 +81,7 @@ func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) {
 }
 
 func (this *Camunda) executeNextTasks() (wait bool) {
-	tasks, err := this.getTasks()
+	tasks, err := retry(this.config.FetchRetries, 0, this.getTasks)
 	if err != nil {
 		this.config.GetLogger().Error("error on ExecuteNextTasks getTask", "error", err)
 		return true
@@ -143,7 +142,7 @@ func (this *Camunda) getTasks() (tasks []model.CamundaExternalTask, err error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		temp, err := ioutil.ReadAll(resp.Body)
+		temp, err := io.ReadAll(resp.Body)
 		err = errors.New(fmt.Sprintln(endpoint, resp.Status, resp.StatusCode, string(temp), err))
 		return tasks, err
 	}
@@ -205,4 +204,20 @@ func (this *Camunda) stopProcessInstance(id string) (err error) {
 	msg, _ := io.ReadAll(resp.Body)
 	err = errors.New("error on delete in engine for /engine-rest/process-instance/" + url.PathEscape(id) + ": " + resp.Status + " " + string(msg))
 	return err
+}
+
+func retry[T any](attempts int, sleep time.Duration, f func() (T, error)) (result T, err error) {
+	if attempts == 0 {
+		attempts = 1
+	}
+	for i := 0; i < attempts; i++ {
+		result, err = f()
+		if err == nil {
+			return
+		}
+		if sleep > 0 {
+			time.Sleep(sleep)
+		}
+	}
+	return result, fmt.Errorf("after %d attempts, last error: %w", attempts, err)
 }

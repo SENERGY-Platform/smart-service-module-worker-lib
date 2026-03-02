@@ -45,6 +45,8 @@ type Config struct {
 	AuthClientSecret                     string `json:"auth_client_secret" config:"secret"`
 	TokenCacheDefaultExpirationInSeconds int    `json:"token_cache_default_expiration_in_seconds"`
 
+	FetchRetries int `json:"fetch_retries"`
+
 	LogLevel string       `json:"log_level"`
 	logger   *slog.Logger `json:"-"`
 }
