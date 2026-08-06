@@ -101,7 +101,10 @@ func FilterMethods(dirAst map[string]*ast.Package, typeName string) (result []*a
 		for _, fileAst := range packageAst.Files {
 			for _, decl := range fileAst.Decls {
 				fdecl, ok := decl.(*ast.FuncDecl)
-				if ok && fdecl.Recv != nil && len(fdecl.Recv.List) > 0 {
+				//an unexported method is invisible to reflect and therefore not callable
+				//from a script, documenting it would also collide with the exported method
+				//of the same uncapitalised name
+				if ok && fdecl.Name.IsExported() && fdecl.Recv != nil && len(fdecl.Recv.List) > 0 {
 					ptr, isStarExp := fdecl.Recv.List[0].Type.(*ast.StarExpr)
 					if isStarExp {
 						receiverType, isIdent := ptr.X.(*ast.Ident)

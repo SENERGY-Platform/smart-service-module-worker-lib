@@ -59,6 +59,7 @@ func typeDefSources() []interface{} {
 		models.Device{},
 		models.DeviceGroup{},
 		models.Hub{},
+		models.Location{},
 		model2.IotOption{},
 	}
 }
@@ -145,9 +146,13 @@ func getFieldName(t reflect.Type, field reflect.StructField) string {
 }
 
 func getTypeName(t reflect.Type) string {
-	result := t.Name()
-	if result != "" {
-		return util.ToJsDocName(result)
+	if t.Kind() == reflect.Struct && t.Name() != "" {
+		return util.ToJsDocName(t.Name())
+	}
+	//a named non struct type like models.Interaction has no typedef of its own,
+	//scripts see its underlying value
+	if primitive := getPrimitiveTypeName(t.Kind()); primitive != "" {
+		return primitive
 	}
 	switch t.Kind() {
 	case reflect.Slice:
@@ -158,6 +163,20 @@ func getTypeName(t reflect.Type) string {
 		return getTypeName(t.Elem()) + "|null"
 	case reflect.Interface:
 		return "Object|null"
+	}
+	return ""
+}
+
+func getPrimitiveTypeName(kind reflect.Kind) string {
+	switch kind {
+	case reflect.String:
+		return "string"
+	case reflect.Bool:
+		return "boolean"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		return "number"
 	}
 	return ""
 }

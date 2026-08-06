@@ -207,11 +207,6 @@ const completer = {
     meta: 'static'
 },
 {
-    caption: 'util.getDevicesWithServiceFromIotOption',
-    value: 'var result_as_IotOption_list = util.getDevicesWithServiceFromIotOption(entity_as_IotOption, criteria_as_FilterCriteria_list);',
-    meta: 'static'
-},
-{
     caption: 'util.getUserId',
     value: 'var result_as_string = util.getUserId();',
     meta: 'static'
@@ -482,11 +477,6 @@ const completer = {
 {
     caption: 'util.getDevicesWithServiceFromEntityString',
     value: 'util.getDevicesWithServiceFromEntityString(entityStr_as_string, criteria_as_FilterCriteria_list)',
-    meta: 'static'
-},
-{
-    caption: 'util.getDevicesWithServiceFromIotOption',
-    value: 'util.getDevicesWithServiceFromIotOption(entity_as_IotOption, criteria_as_FilterCriteria_list)',
     meta: 'static'
 },
 {

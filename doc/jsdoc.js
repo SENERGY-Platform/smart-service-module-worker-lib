@@ -364,15 +364,6 @@
  */
 
 /** 
- * @function util#getDevicesWithServiceFromIotOption
- * @param { IotOption } entity
- * @param { FilterCriteria[] } criteria
- * @returns { IotOption[] }
- * @example
- * util.getDevicesWithServiceFromIotOption(entity_as_IotOption, criteria_as_FilterCriteria_list)
- */
-
-/** 
  * GetUserId returns the user-id of the executing user
  * @function util#getUserId
  * @returns { string }
@@ -554,7 +545,7 @@ throws exception if variable is unknown
  * @property { string } id
  * @property { string } name
  * @property { string } display_unit
- * @property { Type } type
+ * @property { string } type
  * @property { Object|null } min_value
  * @property { Object|null } max_value
  * @property { Object|null[] } allowed_values
@@ -587,14 +578,14 @@ throws exception if variable is unknown
  * @property { AspectNode } aspect_node
  * @property { string } function_id
  * @property { Object|null } value
- * @property { Type } type
+ * @property { string } type
  */
 
 /**
  * @typedef {Object} Content
  * @property { string } id
  * @property { ContentVariable } content_variable
- * @property { Serialization } serialization
+ * @property { string } serialization
  * @property { string } protocol_segment_id
  */
 
@@ -604,7 +595,7 @@ throws exception if variable is unknown
  * @property { string } name
  * @property { boolean } is_void
  * @property { boolean } omit_empty
- * @property { Type } type
+ * @property { string } type
  * @property { ContentVariable[] } sub_content_variables
  * @property { string } characteristic_id
  * @property { Object|null } value
@@ -654,7 +645,7 @@ throws exception if variable is unknown
 
 /**
  * @typedef {Object} DeviceGroupFilterCriteria
- * @property { Interaction } interaction
+ * @property { string } interaction
  * @property { string } function_id
  * @property { string } aspect_id
  * @property { string } device_class_id
@@ -693,7 +684,7 @@ throws exception if variable is unknown
 
 /**
  * @typedef {Object} FilterCriteria
- * @property { Interaction } interaction
+ * @property { string } interaction
  * @property { string } function_id
  * @property { string } device_class_id
  * @property { string } aspect_id
@@ -744,12 +735,22 @@ throws exception if variable is unknown
  */
 
 /**
+ * @typedef {Object} Location
+ * @property { string } id
+ * @property { string } name
+ * @property { string } description
+ * @property { string } image
+ * @property { string[] } device_ids
+ * @property { string[] } device_group_ids
+ */
+
+/**
  * @typedef {Object} Service
  * @property { string } id
  * @property { string } local_id
  * @property { string } name
  * @property { string } description
- * @property { Interaction } interaction
+ * @property { string } interaction
  * @property { string } protocol_id
  * @property { Content[] } inputs
  * @property { Content[] } outputs
@@ -775,6 +776,6 @@ throws exception if variable is unknown
  * @property { Object|null } value
  * @property { boolean } is_controlling_function
  * @property { Configurable[] } configurables
- * @property { Type } type
- * @property { Interaction } interaction
+ * @property { string } type
+ * @property { string } interaction
  */

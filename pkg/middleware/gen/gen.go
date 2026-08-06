@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/acecodecompleter"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/jsdoc"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/typescript"
 	"os"
 	"path"
 	"sync"
@@ -29,7 +30,7 @@ import (
 
 func main() {
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
 	docDir := "../../../doc"
 
@@ -51,6 +52,16 @@ func main() {
 		}
 		jsDocFile := path.Join(docDir, "jsdoc.js")
 		storeAceCompleterFile(jsDocFile, jsDocOutput)
+	}()
+
+	go func() {
+		defer wg.Done()
+		declarations, err := typescript.GenerateTypescriptDeclarations("../scriptenv")
+		if err != nil {
+			panic(err)
+		}
+		declarationsFile := path.Join(docDir, "script-env.d.ts")
+		storeAceCompleterFile(declarationsFile, declarations)
 	}()
 
 	wg.Wait()
