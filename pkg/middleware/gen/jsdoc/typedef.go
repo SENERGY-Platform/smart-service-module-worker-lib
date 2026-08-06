@@ -22,10 +22,16 @@ import (
 	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/util"
 	model2 "github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
+	"github.com/dop251/goja"
 	"reflect"
 	"slices"
 	"strings"
 )
+
+// fieldNameMapper must match the mapper runScript() installs in pkg/middleware/scripts.go.
+// scripts see struct fields under their json tag name, not under their go field name,
+// and fields without a tag usable as js identifier are not visible to scripts at all.
+var fieldNameMapper = goja.TagFieldNameMapper("json", true)
 
 type TypeDefField struct {
 	Name string
@@ -37,8 +43,8 @@ type TypeDef struct {
 	Fields []TypeDefField
 }
 
-func GetTypeDefs() (result []TypeDef) {
-	list := []interface{}{
+func typeDefSources() []interface{} {
+	return []interface{}{
 		models.AspectNode{},
 		models.Aspect{},
 		models.Characteristic{},
@@ -55,7 +61,10 @@ func GetTypeDefs() (result []TypeDef) {
 		models.Hub{},
 		model2.IotOption{},
 	}
-	for _, t := range list {
+}
+
+func GetTypeDefs() (result []TypeDef) {
+	for _, t := range typeDefSources() {
 		result = append(result, GetTypeDef(t)...)
 	}
 
@@ -103,8 +112,15 @@ func getTypeDef(t reflect.Type, done []string) (result []TypeDef) {
 	done = append(done, this.Name)
 	sub := []TypeDef{}
 	for _, field := range reflect.VisibleFields(t) {
+		name := getFieldName(t, field)
+		if name == "" {
+			continue //not visible to scripts
+		}
+		if slices.ContainsFunc(this.Fields, func(f TypeDefField) bool { return f.Name == name }) {
+			continue //shadowed by a field of the same name closer to the surface
+		}
 		this.Fields = append(this.Fields, TypeDefField{
-			Name: field.Name,
+			Name: name,
 			Type: getTypeName(field.Type),
 		})
 		subStruct := getDeepStruct(field.Type)
@@ -115,6 +131,17 @@ func getTypeDef(t reflect.Type, done []string) (result []TypeDef) {
 	result = []TypeDef{this}
 	result = append(result, sub...)
 	return result
+}
+
+// getFieldName returns the name scripts use to access the field, or "" if the field is
+// not visible to scripts.
+func getFieldName(t reflect.Type, field reflect.StructField) string {
+	if !field.IsExported() {
+		//an unexported field is never visible, even if it carries a json tag
+		//(a case go vet rejects, which is why no test covers it)
+		return ""
+	}
+	return fieldNameMapper.FieldName(t, field)
 }
 
 func getTypeName(t reflect.Type) string {

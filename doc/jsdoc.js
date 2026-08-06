@@ -526,255 +526,255 @@ throws exception if variable is unknown
 
 /**
  * @typedef {Object} Aspect
- * @property { string } Id
- * @property { string } Name
- * @property { Aspect[] } SubAspects
+ * @property { string } id
+ * @property { string } name
+ * @property { Aspect[] } sub_aspects
  */
 
 /**
  * @typedef {Object} AspectNode
- * @property { string } Id
- * @property { string } Name
- * @property { string } RootId
- * @property { string } ParentId
- * @property { string[] } ChildIds
- * @property { string[] } AncestorIds
- * @property { string[] } DescendentIds
+ * @property { string } id
+ * @property { string } name
+ * @property { string } root_id
+ * @property { string } parent_id
+ * @property { string[] } child_ids
+ * @property { string[] } ancestor_ids
+ * @property { string[] } descendent_ids
  */
 
 /**
  * @typedef {Object} Attribute
- * @property { string } Key
- * @property { string } Value
- * @property { string } Origin
+ * @property { string } key
+ * @property { string } value
+ * @property { string } origin
  */
 
 /**
  * @typedef {Object} Characteristic
- * @property { string } Id
- * @property { string } Name
- * @property { string } DisplayUnit
- * @property { Type } Type
- * @property { Object|null } MinValue
- * @property { Object|null } MaxValue
- * @property { Object|null[] } AllowedValues
- * @property { Object|null } Value
- * @property { Characteristic[] } SubCharacteristics
+ * @property { string } id
+ * @property { string } name
+ * @property { string } display_unit
+ * @property { Type } type
+ * @property { Object|null } min_value
+ * @property { Object|null } max_value
+ * @property { Object|null[] } allowed_values
+ * @property { Object|null } value
+ * @property { Characteristic[] } sub_characteristics
  */
 
 /**
  * @typedef {Object} Concept
- * @property { string } Id
- * @property { string } Name
- * @property { string[] } CharacteristicIds
- * @property { string } BaseCharacteristicId
- * @property { ConverterExtension[] } Conversions
+ * @property { string } id
+ * @property { string } name
+ * @property { string[] } characteristic_ids
+ * @property { string } base_characteristic_id
+ * @property { ConverterExtension[] } conversions
  */
 
 /**
  * @typedef {Object} ConceptWithCharacteristics
- * @property { string } Id
- * @property { string } Name
- * @property { string } BaseCharacteristicId
- * @property { Characteristic[] } Characteristics
- * @property { ConverterExtension[] } Conversions
+ * @property { string } id
+ * @property { string } name
+ * @property { string } base_characteristic_id
+ * @property { Characteristic[] } characteristics
+ * @property { ConverterExtension[] } conversions
  */
 
 /**
  * @typedef {Object} Configurable
- * @property { string } Path
- * @property { string } CharacteristicId
- * @property { AspectNode } AspectNode
- * @property { string } FunctionId
- * @property { Object|null } Value
- * @property { Type } Type
+ * @property { string } path
+ * @property { string } characteristic_id
+ * @property { AspectNode } aspect_node
+ * @property { string } function_id
+ * @property { Object|null } value
+ * @property { Type } type
  */
 
 /**
  * @typedef {Object} Content
- * @property { string } Id
- * @property { ContentVariable } ContentVariable
- * @property { Serialization } Serialization
- * @property { string } ProtocolSegmentId
+ * @property { string } id
+ * @property { ContentVariable } content_variable
+ * @property { Serialization } serialization
+ * @property { string } protocol_segment_id
  */
 
 /**
  * @typedef {Object} ContentVariable
- * @property { string } Id
- * @property { string } Name
- * @property { boolean } IsVoid
- * @property { boolean } OmitEmpty
- * @property { Type } Type
- * @property { ContentVariable[] } SubContentVariables
- * @property { string } CharacteristicId
- * @property { Object|null } Value
- * @property { string[] } SerializationOptions
- * @property { string } UnitReference
- * @property { string } FunctionId
- * @property { string } AspectId
+ * @property { string } id
+ * @property { string } name
+ * @property { boolean } is_void
+ * @property { boolean } omit_empty
+ * @property { Type } type
+ * @property { ContentVariable[] } sub_content_variables
+ * @property { string } characteristic_id
+ * @property { Object|null } value
+ * @property { string[] } serialization_options
+ * @property { string } unit_reference
+ * @property { string } function_id
+ * @property { string } aspect_id
  */
 
 /**
  * @typedef {Object} ConverterExtension
- * @property { string } From
- * @property { string } To
- * @property { number } Distance
- * @property { string } Formula
- * @property { string } PlaceholderName
+ * @property { string } from
+ * @property { string } to
+ * @property { number } distance
+ * @property { string } formula
+ * @property { string } placeholder_name
  */
 
 /**
  * @typedef {Object} Device
- * @property { string } Id
- * @property { string } LocalId
- * @property { string } Name
- * @property { Attribute[] } Attributes
- * @property { string } DeviceTypeId
- * @property { string } OwnerId
+ * @property { string } id
+ * @property { string } local_id
+ * @property { string } name
+ * @property { Attribute[] } attributes
+ * @property { string } device_type_id
+ * @property { string } owner_id
  */
 
 /**
  * @typedef {Object} DeviceClass
- * @property { string } Id
- * @property { string } Image
- * @property { string } Name
+ * @property { string } id
+ * @property { string } image
+ * @property { string } name
  */
 
 /**
  * @typedef {Object} DeviceGroup
- * @property { string } Id
- * @property { string } Name
- * @property { string } Image
- * @property { DeviceGroupFilterCriteria[] } Criteria
- * @property { string[] } DeviceIds
- * @property { string[] } CriteriaShort
- * @property { Attribute[] } Attributes
- * @property { string } AutoGeneratedByDevice
+ * @property { string } id
+ * @property { string } name
+ * @property { string } image
+ * @property { DeviceGroupFilterCriteria[] } criteria
+ * @property { string[] } device_ids
+ * @property { string[] } criteria_short
+ * @property { Attribute[] } attributes
+ * @property { string } auto_generated_by_device
  */
 
 /**
  * @typedef {Object} DeviceGroupFilterCriteria
- * @property { Interaction } Interaction
- * @property { string } FunctionId
- * @property { string } AspectId
- * @property { string } DeviceClassId
+ * @property { Interaction } interaction
+ * @property { string } function_id
+ * @property { string } aspect_id
+ * @property { string } device_class_id
  */
 
 /**
  * @typedef {Object} DeviceGroupSelection
- * @property { string } Id
+ * @property { string } id
  */
 
 /**
  * @typedef {Object} DeviceSelection
- * @property { string } DeviceId
- * @property { string|null } ServiceId
- * @property { string|null } Path
- * @property { string|null } CharacteristicId
+ * @property { string } device_id
+ * @property { string|null } service_id
+ * @property { string|null } path
+ * @property { string|null } characteristic_id
  */
 
 /**
  * @typedef {Object} DeviceType
- * @property { string } Id
- * @property { string } Name
- * @property { string } Description
- * @property { ServiceGroup[] } ServiceGroups
- * @property { Service[] } Services
- * @property { string } DeviceClassId
- * @property { Attribute[] } Attributes
+ * @property { string } id
+ * @property { string } name
+ * @property { string } description
+ * @property { ServiceGroup[] } service_groups
+ * @property { Service[] } services
+ * @property { string } device_class_id
+ * @property { Attribute[] } attributes
  */
 
 /**
  * @typedef {Object} DeviceTypeSelectable
- * @property { string } DeviceTypeId
- * @property { Service[] } Services
- * @property { Map<string,ServicePathOption[]> } ServicePathOptions
+ * @property { string } device_type_id
+ * @property { Service[] } services
+ * @property { Map<string,ServicePathOption[]> } service_path_options
  */
 
 /**
  * @typedef {Object} FilterCriteria
- * @property { Interaction } Interaction
- * @property { string } FunctionId
- * @property { string } DeviceClassId
- * @property { string } AspectId
+ * @property { Interaction } interaction
+ * @property { string } function_id
+ * @property { string } device_class_id
+ * @property { string } aspect_id
  */
 
 /**
  * @typedef {Object} FunctionType
- * @property { string } Id
- * @property { string } Name
- * @property { string } DisplayName
- * @property { string } Description
- * @property { string } ConceptId
- * @property { string } RdfType
+ * @property { string } id
+ * @property { string } name
+ * @property { string } display_name
+ * @property { string } description
+ * @property { string } concept_id
+ * @property { string } rdf_type
  */
 
 /**
  * @typedef {Object} GenericEventSource
- * @property { string } FilterType
- * @property { string } FilterIds
- * @property { string } Topic
- * @property { string } Path
- * @property { string|null } CharacteristicId
+ * @property { string } filter_type
+ * @property { string } filter_ids
+ * @property { string } topic
+ * @property { string } path
+ * @property { string|null } characteristic_id
  */
 
 /**
  * @typedef {Object} Hub
- * @property { string } Id
- * @property { string } Name
- * @property { string } Hash
- * @property { string[] } DeviceLocalIds
- * @property { string[] } DeviceIds
- * @property { string } OwnerId
+ * @property { string } id
+ * @property { string } name
+ * @property { string } hash
+ * @property { string[] } device_local_ids
+ * @property { string[] } device_ids
+ * @property { string } owner_id
  */
 
 /**
  * @typedef {Object} ImportSelection
- * @property { string } Id
- * @property { string|null } Path
- * @property { string|null } CharacteristicId
+ * @property { string } id
+ * @property { string|null } path
+ * @property { string|null } characteristic_id
  */
 
 /**
  * @typedef {Object} IotOption
- * @property { DeviceSelection|null } DeviceSelection
- * @property { DeviceGroupSelection|null } DeviceGroupSelection
- * @property { ImportSelection|null } ImportSelection
- * @property { GenericEventSource|null } GenericEventSource
+ * @property { DeviceSelection|null } device_selection
+ * @property { DeviceGroupSelection|null } device_group_selection
+ * @property { ImportSelection|null } import_selection
+ * @property { GenericEventSource|null } generic_event_source
  */
 
 /**
  * @typedef {Object} Service
- * @property { string } Id
- * @property { string } LocalId
- * @property { string } Name
- * @property { string } Description
- * @property { Interaction } Interaction
- * @property { string } ProtocolId
- * @property { Content[] } Inputs
- * @property { Content[] } Outputs
- * @property { Attribute[] } Attributes
- * @property { string } ServiceGroupKey
+ * @property { string } id
+ * @property { string } local_id
+ * @property { string } name
+ * @property { string } description
+ * @property { Interaction } interaction
+ * @property { string } protocol_id
+ * @property { Content[] } inputs
+ * @property { Content[] } outputs
+ * @property { Attribute[] } attributes
+ * @property { string } service_group_key
  */
 
 /**
  * @typedef {Object} ServiceGroup
- * @property { string } Key
- * @property { string } Name
- * @property { string } Description
+ * @property { string } key
+ * @property { string } name
+ * @property { string } description
  */
 
 /**
  * @typedef {Object} ServicePathOption
- * @property { string } ServiceId
- * @property { string } Path
- * @property { string } CharacteristicId
- * @property { AspectNode } AspectNode
- * @property { string } FunctionId
- * @property { boolean } IsVoid
- * @property { Object|null } Value
- * @property { boolean } IsControllingFunction
- * @property { Configurable[] } Configurables
- * @property { Type } Type
- * @property { Interaction } Interaction
+ * @property { string } service_id
+ * @property { string } path
+ * @property { string } characteristic_id
+ * @property { AspectNode } aspect_node
+ * @property { string } function_id
+ * @property { boolean } is_void
+ * @property { Object|null } value
+ * @property { boolean } is_controlling_function
+ * @property { Configurable[] } configurables
+ * @property { Type } type
+ * @property { Interaction } interaction
  */
