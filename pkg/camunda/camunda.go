@@ -29,9 +29,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/SENERGY-Platform/gin-middleware/otelx"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
+
+// TracerName identifies this library as the source of the spans it creates.
+const TracerName = "github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
 
 func New(config configuration.Config, smartServiceRepo SmartServiceRepository, handler Handler) *Camunda {
 	return &Camunda{
@@ -52,13 +60,13 @@ type Camunda struct {
 }
 
 type SmartServiceRepository interface {
-	SendWorkerError(task model.CamundaExternalTask, err error) error
-	SendWorkerModules(modules []model.Module) (result []model.SmartServiceModule, err error)
+	SendWorkerError(ctx context.Context, task model.CamundaExternalTask, err error) error
+	SendWorkerModules(ctx context.Context, modules []model.Module) (result []model.SmartServiceModule, err error)
 }
 
 type Handler interface {
-	Do(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error)
-	Undo(modules []model.Module, reason error)
+	Do(ctx context.Context, task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error)
+	Undo(ctx context.Context, modules []model.Module, reason error)
 }
 
 func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) {
@@ -70,7 +78,7 @@ func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) {
 				wg.Done()
 				return
 			default:
-				wait := this.executeNextTasks()
+				wait := this.executeNextTasks(ctx)
 				if wait {
 					duration := time.Duration(this.config.CamundaWorkerWaitDurationInMs) * time.Millisecond
 					time.Sleep(duration)
@@ -80,47 +88,74 @@ func (this *Camunda) Start(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 }
 
-func (this *Camunda) executeNextTasks() (wait bool) {
+func (this *Camunda) executeNextTasks(ctx context.Context) (wait bool) {
+	//no span for the poll itself: it runs continuously and mostly returns nothing,
+	//a span per poll would be noise without a task to attach it to.
 	tasks, err := retry(this.config.FetchRetries, 0, this.getTasks)
 	if err != nil {
-		this.config.GetLogger().Error("error on ExecuteNextTasks getTask", "error", err)
+		this.config.GetLogger().ErrorContext(ctx, "error on ExecuteNextTasks getTask", "error", err)
 		return true
 	}
 	if len(tasks) == 0 {
 		return true
 	}
 	for _, task := range tasks {
-		modules, outputs, err := this.handler.Do(task)
+		this.executeTask(ctx, task)
+	}
+	return false
+}
+
+// executeTask handles one fetched task in its own trace.
+func (this *Camunda) executeTask(lifetimeCtx context.Context, task model.CamundaExternalTask) {
+	//context.WithoutCancel: the task is locked in camunda and already running; a shutdown must not
+	//cut it off in the middle. that is the behaviour of this worker today and this change is about
+	//telemetry, not about the cancellation semantics of a running task.
+	ctx, span := otel.Tracer(TracerName).Start(
+		context.WithoutCancel(lifetimeCtx),
+		this.config.CamundaWorkerTopic,
+		trace.WithAttributes(
+			attribute.String("camunda_task_id", task.Id),
+			attribute.String("camunda_process_instance_id", task.ProcessInstanceId),
+			attribute.String("camunda_activity_id", task.ActivityId),
+		),
+	)
+	defer span.End()
+
+	modules, outputs, err := this.handler.Do(ctx, task)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		repoErr := this.smartServiceRepo.SendWorkerError(ctx, task, err)
+		if repoErr == nil {
+			_ = this.stopProcessInstance(ctx, task.ProcessInstanceId) //error is sent --> no more retries
+		}
+		//retry task after lock duration, if stop fails or repoErr != nil
+	} else {
+		_, err = this.smartServiceRepo.SendWorkerModules(ctx, modules)
 		if err != nil {
-			repoErr := this.smartServiceRepo.SendWorkerError(task, err)
-			if repoErr == nil {
-				_ = this.stopProcessInstance(task.ProcessInstanceId) //error is sent --> no more retries
-			}
-			//retry task after lock duration, if stop fails or repoErr != nil
+			//undo module and retry after lock duration
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			this.handler.Undo(ctx, modules, err)
+			this.config.GetLogger().ErrorContext(ctx, "error on executeNextTasks getTask", "error", err)
+			debug.PrintStack()
 		} else {
-			_, err = this.smartServiceRepo.SendWorkerModules(modules)
+			err = this.completeTask(ctx, task.Id, outputs)
 			if err != nil {
-				//undo module and retry after lock duration
-				this.handler.Undo(modules, err)
-				this.config.GetLogger().Error("error on executeNextTasks getTask", "error", err)
-				debug.PrintStack()
-			} else {
-				err = this.completeTask(task.Id, outputs)
-				if err != nil {
-					this.config.GetLogger().Error("error on executeNextTasks getTask", "error", err, "stack", string(debug.Stack()))
-					this.handler.Undo(modules, err)
-					repoErr := this.smartServiceRepo.SendWorkerError(task, err)
-					if repoErr == nil {
-						//error is sent --> no more retries
-						//if it is a problem with the process we don't want any retries
-						//if it is a problem with the process-engine, the stop won't be successful and a future try may succeed
-						_ = this.stopProcessInstance(task.ProcessInstanceId)
-					}
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
+				this.config.GetLogger().ErrorContext(ctx, "error on executeNextTasks getTask", "error", err, "stack", string(debug.Stack()))
+				this.handler.Undo(ctx, modules, err)
+				repoErr := this.smartServiceRepo.SendWorkerError(ctx, task, err)
+				if repoErr == nil {
+					//error is sent --> no more retries
+					//if it is a problem with the process we don't want any retries
+					//if it is a problem with the process-engine, the stop won't be successful and a future try may succeed
+					_ = this.stopProcessInstance(ctx, task.ProcessInstanceId)
 				}
 			}
 		}
 	}
-	return false
 }
 
 func (this *Camunda) getTasks() (tasks []model.CamundaExternalTask, err error) {
@@ -150,8 +185,8 @@ func (this *Camunda) getTasks() (tasks []model.CamundaExternalTask, err error) {
 	return
 }
 
-func (this *Camunda) completeTask(taskId string, outputs map[string]interface{}) (err error) {
-	this.config.GetLogger().Debug("complete task", "taskId", taskId, "outputs", outputs)
+func (this *Camunda) completeTask(ctx context.Context, taskId string, outputs map[string]interface{}) (err error) {
+	this.config.GetLogger().DebugContext(ctx, "complete task", "taskId", taskId, "outputs", outputs)
 	client := http.Client{Timeout: 5 * time.Second}
 
 	variables := map[string]model.CamundaVariable{}
@@ -165,7 +200,16 @@ func (this *Camunda) completeTask(taskId string, outputs map[string]interface{})
 	if err != nil {
 		return
 	}
-	resp, err := client.Post(this.config.CamundaUrl+"/engine-rest/external-task/"+url.PathEscape(taskId)+"/complete", "application/json", b)
+	request, err := http.NewRequest("POST", this.config.CamundaUrl+"/engine-rest/external-task/"+url.PathEscape(taskId)+"/complete", b)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	err = otelx.InjectContextToRequest(ctx, request)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(request)
 	if err != nil {
 		return err
 	}
@@ -176,17 +220,21 @@ func (this *Camunda) completeTask(taskId string, outputs map[string]interface{})
 	}
 
 	if resp.StatusCode >= 300 {
-		this.config.GetLogger().Error("unable to complete task", "statuscode", resp.StatusCode, "response", string(pl))
+		this.config.GetLogger().ErrorContext(ctx, "unable to complete task", "statuscode", resp.StatusCode, "response", string(pl))
 		return fmt.Errorf("unable to complete task: %v, %v", resp.StatusCode, string(pl))
 	} else {
-		this.config.GetLogger().Debug("complete camunda task", "request", completeRequest, "response", string(pl))
+		this.config.GetLogger().DebugContext(ctx, "complete camunda task", "request", completeRequest, "response", string(pl))
 	}
 	return nil
 }
 
-func (this *Camunda) stopProcessInstance(id string) (err error) {
+func (this *Camunda) stopProcessInstance(ctx context.Context, id string) (err error) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	request, err := http.NewRequest("DELETE", this.config.CamundaUrl+"/engine-rest/process-instance/"+url.PathEscape(id)+"?skipIoMappings=true", nil)
+	if err != nil {
+		return err
+	}
+	err = otelx.InjectContextToRequest(ctx, request)
 	if err != nil {
 		return err
 	}

@@ -17,45 +17,18 @@
 package smartservicerepository
 
 import (
-	"encoding/json"
-	"errors"
-	"io"
-	"net/http"
-	"net/url"
-	"time"
+	"context"
 )
 
-func (this *SmartServiceRepository) GetInstanceUser(instanceId string) (userId string, err error) {
-	err = this.cache.Use("instances-by-process-id/"+instanceId+"/user-id", 10*time.Second, func() (interface{}, error) {
-		return this.getInstanceUser(instanceId)
-	}, &userId)
-	return userId, nil
-}
-
-func (this *SmartServiceRepository) getInstanceUser(instanceId string) (userId string, err error) {
-	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(instanceId)+"/user-id", nil)
+// GetInstanceUser returns the user of the smart-service-instance that belongs to the given
+// camunda process instance.
+// it delegates to GetCachedSmartServiceInstance instead of reading the user-id on its own:
+// the middleware has already read the whole instance for this task under the same cache key,
+// so the user-id comes out of the cache instead of causing a second request per task.
+func (this *SmartServiceRepository) GetInstanceUser(ctx context.Context, processInstanceId string) (userId string, err error) {
+	instance, err := this.GetCachedSmartServiceInstance(ctx, processInstanceId)
 	if err != nil {
-		return userId, err
+		return "", err
 	}
-	token, err := this.auth.Ensure()
-	if err != nil {
-		return userId, err
-	}
-	req.Header.Set("Authorization", token.Jwt())
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return userId, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 300 {
-		temp, _ := io.ReadAll(resp.Body)
-		err = errors.New(string(temp))
-		return userId, err
-	}
-	err = json.NewDecoder(resp.Body).Decode(&userId)
-	if err != nil {
-		return userId, err
-	}
-	return userId, nil
+	return instance.UserId, nil
 }

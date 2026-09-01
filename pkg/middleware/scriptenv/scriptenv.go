@@ -17,6 +17,8 @@
 package scriptenv
 
 import (
+	"context"
+
 	"github.com/SENERGY-Platform/device-repository/lib/client"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/dop251/goja"
@@ -59,9 +61,9 @@ type Auth interface {
 }
 
 type VariablesRepo interface {
-	GetVariables(processId string) (result map[string]interface{}, err error)
-	SetVariables(processId string, changes map[string]interface{}) error
-	GetInstanceUser(instanceId string) (userId string, err error)
+	GetVariables(ctx context.Context, processId string) (result map[string]interface{}, err error)
+	SetVariables(ctx context.Context, processId string, changes map[string]interface{}) error
+	GetInstanceUser(ctx context.Context, processInstanceId string) (userId string, err error)
 }
 
 const PreScriptPrefix = "prescript"

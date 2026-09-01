@@ -77,3 +77,37 @@ func Start(ctx context.Context, wg *sync.WaitGroup, config processdeployment.Con
 	return lib.Start(ctx, wg, libConfig, handlerFactory)
 }
 ```
+# OpenTelemetry
+
+Traces are sent to an OTLP collector over gRPC. The endpoint is set with the config value
+`otel_endpoint` (env `OTEL_ENDPOINT`); if it is empty, the default
+`jaeger.logging.svc.cluster.local:4317` is used.
+
+The service name is not a constant of this library. Every worker using it is its own service and
+has to show up in jaeger under its own name, so `configuration.ServiceName()` derives it from the
+main module of the binary (e.g. `github.com/SENERGY-Platform/smart-service-module-worker-analytics`
+becomes `smart-service-module-worker-analytics`). Workers that create spans of their own should use
+the same function.
+
+What is instrumented:
+
+- one span per fetched camunda task, named after the worker topic, with the task-id, the
+  process-instance-id and the activity-id as attributes. The poll (`fetchAndLock`) itself gets no
+  span; it runs continuously and mostly returns nothing.
+- the context of a task is derived with `context.WithoutCancel`: a shutdown does not cut off a task
+  that is already locked and running.
+- outgoing requests to the smart-service-repository and the camunda calls that belong to a task
+  (`complete`, error and stop). They carry trace-context and baggage on, so a task can be followed
+  across services.
+- log records, through the open-telemetry handler of `struct-logger`. It writes the baggage into the
+  record and the record into the current span, but **only for the context based log methods**
+  (`ErrorContext`, `InfoContext`, ...). A `logger.Error()` without a context stays untraced.
+
+`middleware.Do` adds the id of the smart-service-instance to the baggage as
+`smart_service_instance_id` before the worker handler runs, so every following request and log
+record of that task carries it. The camunda business-key is not used for this: for maintenance
+procedures it holds a maintenance-id, only the smart-service-repository resolves the
+process-instance-id to the instance.
+
+Not propagated: the keycloak token-exchange and the device-repository client, which has no context
+aware methods.

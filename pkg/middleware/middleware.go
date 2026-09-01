@@ -17,6 +17,7 @@
 package middleware
 
 import (
+	"context"
 	"runtime/debug"
 	"sort"
 	"strings"
@@ -28,6 +29,7 @@ import (
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/references"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/scriptenv"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/tracing"
 )
 
 func New(config configuration.Config, handler camunda.Handler, repo VariablesRepo, auth Auth, iotClient client.Interface) *Middleware {
@@ -53,20 +55,35 @@ type Auth interface {
 }
 
 type VariablesRepo interface {
-	GetVariables(processId string) (result map[string]interface{}, err error)
-	SetVariables(processId string, changes map[string]interface{}) error
-	GetInstanceUser(instanceId string) (userId string, err error)
+	GetVariables(ctx context.Context, processId string) (result map[string]interface{}, err error)
+	SetVariables(ctx context.Context, processId string, changes map[string]interface{}) error
+	GetCachedSmartServiceInstance(ctx context.Context, processInstanceId string) (result model.SmartServiceInstance, err error)
 }
 
-func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
-	userId, err := this.repo.GetInstanceUser(task.ProcessInstanceId)
+func (this *Middleware) Do(ctx context.Context, task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
+	//the whole instance instead of only the user-id: it is the same single request and it also
+	//carries the smart-service-instance-id, which is needed for the baggage below.
+	//the camunda business-key is not an alternative: for maintenance procedures it holds a
+	//maintenance-id, only the repository resolves the process-instance-id to the instance.
+	instance, err := this.repo.GetCachedSmartServiceInstance(ctx, task.ProcessInstanceId)
 	if err != nil {
-		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
-	variables, err := this.repo.GetVariables(task.ProcessInstanceId)
+	userId := instance.UserId
+
+	//the instance-id is put into the baggage before the worker handler and the following repo calls run,
+	//so that every request and every context based log record of this task carries it.
+	//a failing baggage update must not fail the task: telemetry may not prevent work.
+	//it must not be assigned to the named return err, that would overwrite the result of Do.
+	ctx, baggageErr := tracing.AddToBaggage(ctx, tracing.BaggageKeyInstanceId, instance.Id)
+	if baggageErr != nil {
+		this.config.GetLogger().ErrorContext(ctx, "unable to add smart-service-instance-id to baggage -> continue untraced", "error", baggageErr)
+	}
+
+	variables, err := this.repo.GetVariables(ctx, task.ProcessInstanceId)
 	if err != nil {
-		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
 	inputs := map[string]interface{}{}
@@ -75,7 +92,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	variableChanges, outputs, err := this.RunPreScripts(userId, inputs, variables)
 	if err != nil {
-		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
 	for key, value := range variableChanges {
@@ -83,12 +100,12 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	task.Variables, err = references.Handle(task.Variables, variables)
 	if err != nil {
-		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
 	}
-	modules, handlerOutputs, err := this.handler.Do(task)
+	modules, handlerOutputs, err := this.handler.Do(ctx, task)
 	if err != nil {
-		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, handlerOutputs, err
 	}
 	for key, value := range handlerOutputs {
@@ -96,7 +113,7 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 	}
 	postVarChanges, postOutputs, err := this.RunPostScripts(userId, inputs, outputs, variables)
 	if err != nil {
-		this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, handlerOutputs, err
 	}
 	for key, value := range postVarChanges {
@@ -106,17 +123,17 @@ func (this *Middleware) Do(task model.CamundaExternalTask) (modules []model.Modu
 		outputs[key] = value
 	}
 	if len(variableChanges) > 0 {
-		err = this.repo.SetVariables(task.ProcessInstanceId, variableChanges)
+		err = this.repo.SetVariables(ctx, task.ProcessInstanceId, variableChanges)
 		if err != nil {
-			this.config.GetLogger().Error("error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
+			this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 			return modules, outputs, err
 		}
 	}
 	return modules, outputs, nil
 }
 
-func (this *Middleware) Undo(modules []model.Module, reason error) {
-	this.handler.Undo(modules, reason)
+func (this *Middleware) Undo(ctx context.Context, modules []model.Module, reason error) {
+	this.handler.Undo(ctx, modules, reason)
 }
 
 const PreScriptPrefix = "prescript"

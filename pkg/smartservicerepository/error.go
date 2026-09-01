@@ -18,6 +18,7 @@ package smartservicerepository
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -25,20 +26,25 @@ import (
 	"net/url"
 	"runtime/debug"
 
+	"github.com/SENERGY-Platform/gin-middleware/otelx"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
-func (this *SmartServiceRepository) SendWorkerError(task model.CamundaExternalTask, errMsg error) error {
+func (this *SmartServiceRepository) SendWorkerError(ctx context.Context, task model.CamundaExternalTask, errMsg error) error {
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(this.config.CamundaWorkerTopic + ": " + errMsg.Error())
 	if err != nil {
-		this.config.GetLogger().Error("error in SmartServiceRepository.SendWorkerError", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in SmartServiceRepository.SendWorkerError", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(task.ProcessInstanceId)+"/error", body)
 	if err != nil {
 		return err
 	}
+	err = otelx.InjectContextToRequest(ctx, req)
+	if err != nil {
+		return err
+	}
 	token, err := this.auth.Ensure()
 	if err != nil {
 		return err
@@ -59,17 +65,21 @@ func (this *SmartServiceRepository) SendWorkerError(task model.CamundaExternalTa
 	return nil
 }
 
-func (this *SmartServiceRepository) SetSmartServiceError(smartServiceId string, errMsg error) error {
+func (this *SmartServiceRepository) SetSmartServiceError(ctx context.Context, smartServiceId string, errMsg error) error {
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(this.config.CamundaWorkerTopic + ": " + errMsg.Error())
 	if err != nil {
-		this.config.GetLogger().Error("error in SmartServiceRepository.SetSmartServiceError", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in SmartServiceRepository.SetSmartServiceError", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances/"+url.PathEscape(smartServiceId)+"/error", body)
 	if err != nil {
 		return err
 	}
+	err = otelx.InjectContextToRequest(ctx, req)
+	if err != nil {
+		return err
+	}
 	token, err := this.auth.Ensure()
 	if err != nil {
 		return err
@@ -90,15 +100,19 @@ func (this *SmartServiceRepository) SetSmartServiceError(smartServiceId string, 
 	return nil
 }
 
-func (this *SmartServiceRepository) SetSmartServiceModuleError(moduleId string, errMsg error) error {
-	this.config.GetLogger().Warn("set module error", "moduleId", moduleId, "error", errMsg)
+func (this *SmartServiceRepository) SetSmartServiceModuleError(ctx context.Context, moduleId string, errMsg error) error {
+	this.config.GetLogger().WarnContext(ctx, "set module error", "moduleId", moduleId, "error", errMsg)
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(this.config.CamundaWorkerTopic + ": " + errMsg.Error())
 	if err != nil {
-		this.config.GetLogger().Error("error in SmartServiceRepository.SetSmartServiceModuleError", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in SmartServiceRepository.SetSmartServiceModuleError", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/modules/"+url.PathEscape(moduleId)+"/error", body)
+	if err != nil {
+		return err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -122,15 +136,19 @@ func (this *SmartServiceRepository) SetSmartServiceModuleError(moduleId string, 
 	return nil
 }
 
-func (this *SmartServiceRepository) RemoveSmartServiceModuleError(moduleId string) error {
-	this.config.GetLogger().Warn("remove module error", "moduleId", moduleId)
+func (this *SmartServiceRepository) RemoveSmartServiceModuleError(ctx context.Context, moduleId string) error {
+	this.config.GetLogger().WarnContext(ctx, "remove module error", "moduleId", moduleId)
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode("")
 	if err != nil {
-		this.config.GetLogger().Error("error in SmartServiceRepository.SetSmartServiceModuleError", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in SmartServiceRepository.SetSmartServiceModuleError", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/modules/"+url.PathEscape(moduleId)+"/error", body)
+	if err != nil {
+		return err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return err
 	}

@@ -17,16 +17,37 @@
 package smartservicerepository
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"io"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/SENERGY-Platform/gin-middleware/otelx"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
-func (this *SmartServiceRepository) GetSmartServiceInstance(processInstanceId string) (result model.SmartServiceInstance, err error) {
+// GetCachedSmartServiceInstance is GetSmartServiceInstance with a short lived cache.
+// every task of a process instance needs the instance, and GetInstanceUser reads it through
+// this method as well; without the cache each of them would cause an additional request to
+// the smart-service-repository.
+// GetSmartServiceInstance itself stays uncached: it is used by the workers to read back
+// what they have just written.
+func (this *SmartServiceRepository) GetCachedSmartServiceInstance(ctx context.Context, processInstanceId string) (result model.SmartServiceInstance, err error) {
+	err = this.cache.Use("instances-by-process-id/"+processInstanceId, 10*time.Second, func() (interface{}, error) {
+		return this.GetSmartServiceInstance(ctx, processInstanceId)
+	}, &result)
+	return result, err
+}
+
+func (this *SmartServiceRepository) GetSmartServiceInstance(ctx context.Context, processInstanceId string) (result model.SmartServiceInstance, err error) {
 	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processInstanceId), nil)
+	if err != nil {
+		return result, err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return result, err
 	}

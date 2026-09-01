@@ -29,7 +29,12 @@ import (
 	"time"
 
 	struct_logger "github.com/SENERGY-Platform/go-service-base/struct-logger"
+	"github.com/SENERGY-Platform/go-service-base/struct-logger/handlers"
 )
+
+// DefaultServiceName is used as open-telemetry service name if the name of the worker
+// can not be read from the build info.
+const DefaultServiceName = "smart-service-module-worker"
 
 type Config struct {
 	DeviceRepositoryUrl                  string `json:"device_repository_url"`
@@ -47,8 +52,9 @@ type Config struct {
 
 	FetchRetries int `json:"fetch_retries"`
 
-	LogLevel string       `json:"log_level"`
-	logger   *slog.Logger `json:"-"`
+	LogLevel     string       `json:"log_level"`
+	OtelEndpoint string       `json:"otel_endpoint"`
+	logger       *slog.Logger `json:"-"`
 }
 
 func LoadLibConfig(location string) (config Config, err error) {
@@ -144,7 +150,7 @@ func (this *Config) GetLogger() *slog.Logger {
 				org = strings.Join(parts[:2], "/")
 			}
 		}
-		this.logger = struct_logger.New(
+		base := struct_logger.New(
 			struct_logger.Config{
 				Handler:    struct_logger.JsonHandlerSelector,
 				Level:      this.LogLevel,
@@ -155,7 +161,44 @@ func (this *Config) GetLogger() *slog.Logger {
 			os.Stdout,
 			org,
 			project,
-		).With("project-group", "smart-service")
+		)
+		//the open-telemetry handler adds the baggage of the context to the log record and the record to the current span.
+		//it only takes effect if the context based log methods are used (ErrorContext(), InfoContext(), ...)
+		this.logger = slog.New(handlers.NewOpenTelemetryHandler(base.Handler())).With("project-group", "smart-service")
 	}
 	return this.logger
+}
+
+// ServiceName returns the name this process is reported under in open-telemetry.
+// This library is shared by multiple worker services; every one of them has to show up in
+// jaeger under its own name, so the name is taken from the main module of the binary
+// (e.g. github.com/SENERGY-Platform/smart-service-module-worker-analytics -->
+// smart-service-module-worker-analytics) and not from a constant of this library.
+func ServiceName() string {
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if name := serviceNameFromModulePath(info.Main.Path); name != "" {
+			return name
+		}
+	}
+	return DefaultServiceName
+}
+
+// serviceNameFromModulePath returns the last segment of a go module path.
+// a major-version suffix (/v2, /v3, ...) is not part of the name of the service.
+// returns "" if no usable name can be found, the caller falls back to DefaultServiceName.
+func serviceNameFromModulePath(modulePath string) string {
+	parts := strings.Split(strings.Trim(modulePath, "/"), "/")
+	for i := len(parts) - 1; i >= 0; i-- {
+		part := parts[i]
+		if part == "" {
+			continue
+		}
+		if len(part) > 1 && part[0] == 'v' {
+			if _, err := strconv.Atoi(part[1:]); err == nil {
+				continue //major-version suffix, the name is in front of it
+			}
+		}
+		return part
+	}
+	return ""
 }

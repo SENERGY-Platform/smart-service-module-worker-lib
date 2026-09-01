@@ -18,6 +18,7 @@ package smartservicerepository
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,12 +28,13 @@ import (
 	"runtime/debug"
 	"strconv"
 
+	"github.com/SENERGY-Platform/gin-middleware/otelx"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 )
 
-func (this *SmartServiceRepository) SendWorkerModules(modules []model.Module) (result []model.SmartServiceModule, err error) {
+func (this *SmartServiceRepository) SendWorkerModules(ctx context.Context, modules []model.Module) (result []model.SmartServiceModule, err error) {
 	for _, module := range modules {
-		temp, err := this.SendWorkerModule(module)
+		temp, err := this.SendWorkerModule(ctx, module)
 		if err != nil {
 			return result, err
 		}
@@ -41,14 +43,18 @@ func (this *SmartServiceRepository) SendWorkerModules(modules []model.Module) (r
 	return result, nil
 }
 
-func (this *SmartServiceRepository) SendWorkerModule(module model.Module) (result model.SmartServiceModule, err error) {
+func (this *SmartServiceRepository) SendWorkerModule(ctx context.Context, module model.Module) (result model.SmartServiceModule, err error) {
 	body := new(bytes.Buffer)
 	err = json.NewEncoder(body).Encode(module.SmartServiceModuleInit)
 	if err != nil {
-		this.config.GetLogger().Error("error in SmartServiceRepository.SendWorkerModule", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in SmartServiceRepository.SendWorkerModule", "error", err, "stack", string(debug.Stack()))
 		return result, err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(module.ProcesInstanceId)+"/modules/"+url.PathEscape(module.Id), body)
+	if err != nil {
+		return result, err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return result, err
 	}
@@ -75,8 +81,12 @@ func (this *SmartServiceRepository) SendWorkerModule(module model.Module) (resul
 	return result, nil
 }
 
-func (this *SmartServiceRepository) UseModuleDeleteInfo(info model.ModuleDeleteInfo) error {
+func (this *SmartServiceRepository) UseModuleDeleteInfo(ctx context.Context, info model.ModuleDeleteInfo) error {
 	req, err := http.NewRequest("DELETE", info.Url, nil)
+	if err != nil {
+		return err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -95,14 +105,14 @@ func (this *SmartServiceRepository) UseModuleDeleteInfo(info model.ModuleDeleteI
 	if resp.StatusCode >= 300 && resp.StatusCode != http.StatusNotFound {
 		temp, _ := io.ReadAll(resp.Body)
 		err = fmt.Errorf("unexpected response: %v, %v", resp.StatusCode, string(temp))
-		this.config.GetLogger().Error("error in SmartServiceRepository.UseModuleDeleteInfo", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in SmartServiceRepository.UseModuleDeleteInfo", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	_, _ = io.ReadAll(resp.Body)
 	return nil
 }
 
-func (this *SmartServiceRepository) ListExistingModules(processInstanceId string, query model.ModulQuery) (result []model.SmartServiceModule, err error) {
+func (this *SmartServiceRepository) ListExistingModules(ctx context.Context, processInstanceId string, query model.ModulQuery) (result []model.SmartServiceModule, err error) {
 	queryValues := url.Values{}
 	if query.KeyFilter != nil {
 		queryValues.Set("key", *query.KeyFilter)
@@ -116,6 +126,10 @@ func (this *SmartServiceRepository) ListExistingModules(processInstanceId string
 	}
 
 	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processInstanceId)+"/modules"+queryStr, nil)
+	if err != nil {
+		return result, err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return result, err
 	}
@@ -141,7 +155,7 @@ func (this *SmartServiceRepository) ListExistingModules(processInstanceId string
 	return result, nil
 }
 
-func (this *SmartServiceRepository) ListModules(query model.ModulQuery) (result []model.SmartServiceModule, err error) {
+func (this *SmartServiceRepository) ListModules(ctx context.Context, query model.ModulQuery) (result []model.SmartServiceModule, err error) {
 	queryValues := url.Values{}
 	if query.KeyFilter != nil {
 		queryValues.Set("key", *query.KeyFilter)
@@ -165,6 +179,10 @@ func (this *SmartServiceRepository) ListModules(query model.ModulQuery) (result 
 	if err != nil {
 		return result, err
 	}
+	err = otelx.InjectContextToRequest(ctx, req)
+	if err != nil {
+		return result, err
+	}
 	token, err := this.auth.Ensure()
 	if err != nil {
 		return result, err
@@ -187,8 +205,12 @@ func (this *SmartServiceRepository) ListModules(query model.ModulQuery) (result 
 	return result, nil
 }
 
-func (this *SmartServiceRepository) GetModule(userId string, moduleId string) (result model.SmartServiceModule, err error, code int) {
+func (this *SmartServiceRepository) GetModule(ctx context.Context, userId string, moduleId string) (result model.SmartServiceModule, err error, code int) {
 	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/modules/"+url.PathEscape(moduleId), nil)
+	if err != nil {
+		return result, err, http.StatusInternalServerError
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return result, err, http.StatusInternalServerError
 	}

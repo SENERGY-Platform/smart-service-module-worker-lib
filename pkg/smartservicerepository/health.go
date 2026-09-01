@@ -22,9 +22,14 @@ import (
 
 	"github.com/SENERGY-Platform/service-commons/pkg/util"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-func (this *SmartServiceRepository) StartHealthCheck(ctx context.Context, interval time.Duration, query model.ModulQuery, check func(module model.SmartServiceModule) (health error, err error)) {
+// TracerName identifies this package as the source of the spans it creates.
+const TracerName = "github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/smartservicerepository"
+
+func (this *SmartServiceRepository) StartHealthCheck(ctx context.Context, interval time.Duration, query model.ModulQuery, check func(ctx context.Context, module model.SmartServiceModule) (health error, err error)) {
 	go func() {
 		ticker := time.NewTicker(interval)
 		for {
@@ -33,14 +38,23 @@ func (this *SmartServiceRepository) StartHealthCheck(ctx context.Context, interv
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				this.RunHealthCheck(query, check)
+				this.RunHealthCheck(ctx, query, check)
 			}
 		}
 	}()
 }
 
-func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check func(module model.SmartServiceModule) (health error, err error)) {
-	this.config.GetLogger().Info("run health check")
+func (this *SmartServiceRepository) RunHealthCheck(ctx context.Context, query model.ModulQuery, check func(ctx context.Context, module model.SmartServiceModule) (health error, err error)) {
+	//one span per run, not one per checked module: the run is what is triggered and what can be
+	//slow, while a span per module would scale with the module count without answering a question
+	//anyone asks. the ctx that carries this span is what the module listing, the check callback and
+	//the error updates get, so a run is one connected trace instead of unrelated single requests.
+	//the ctx of StartHealthCheck is the worker lifetime ctx and carries no span at all; handing
+	//that one to the callback is what the workers already do and is exactly what looks connected
+	//without being connected.
+	ctx, span := otel.Tracer(TracerName).Start(ctx, "health-check")
+	defer span.End()
+	this.config.GetLogger().InfoContext(ctx, "run health check")
 	moduleCount := 0
 	checked := 0
 	skipped := 0
@@ -49,12 +63,19 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 	updatedAsHealthy := 0
 	updatedAsIll := 0
 	defer func() {
-		this.config.GetLogger().Info("finished health check", "modules", moduleCount, "checked", checked, "skipped", skipped, "healthy", healthy, "ill", ill, "updatedAsHealthy", updatedAsHealthy, "updatedAsIll", updatedAsIll)
+		span.SetAttributes(
+			attribute.Int("health_check_modules", moduleCount),
+			attribute.Int("health_check_checked", checked),
+			attribute.Int("health_check_skipped", skipped),
+			attribute.Int("health_check_healthy", healthy),
+			attribute.Int("health_check_ill", ill),
+		)
+		this.config.GetLogger().InfoContext(ctx, "finished health check", "modules", moduleCount, "checked", checked, "skipped", skipped, "healthy", healthy, "ill", ill, "updatedAsHealthy", updatedAsHealthy, "updatedAsIll", updatedAsIll)
 	}()
 	for module := range util.IterBatch(100, func(limit int64, offset int64) ([]model.SmartServiceModule, error) {
 		query.Limit = limit
 		query.Offset = offset
-		return this.ListModules(query)
+		return this.ListModules(ctx, query)
 	}) {
 		moduleCount++
 		if module.LastUpdate > 0 && time.Since(time.Unix(module.LastUpdate, 0)) < time.Hour {
@@ -63,9 +84,9 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 			continue
 		}
 		checked++
-		health, err := check(module)
+		health, err := check(ctx, module)
 		if err != nil {
-			this.config.GetLogger().Error("error in health check", "error", err, "module", module)
+			this.config.GetLogger().ErrorContext(ctx, "error in health check", "error", err, "module", module)
 			continue
 		}
 		if health == nil {
@@ -75,17 +96,17 @@ func (this *SmartServiceRepository) RunHealthCheck(query model.ModulQuery, check
 		}
 		if health != nil {
 			updatedAsIll++
-			err = this.SetSmartServiceModuleError(module.Id, health)
+			err = this.SetSmartServiceModuleError(ctx, module.Id, health)
 			if err != nil {
-				this.config.GetLogger().Error("error in health check", "error", err, "module", module)
+				this.config.GetLogger().ErrorContext(ctx, "error in health check", "error", err, "module", module)
 				continue
 			}
 		}
 		if health == nil && module.Error != "" {
 			updatedAsHealthy++
-			err = this.RemoveSmartServiceModuleError(module.Id)
+			err = this.RemoveSmartServiceModuleError(ctx, module.Id)
 			if err != nil {
-				this.config.GetLogger().Error("error in health check", "error", err, "module", module)
+				this.config.GetLogger().ErrorContext(ctx, "error in health check", "error", err, "module", module)
 			}
 		}
 	}

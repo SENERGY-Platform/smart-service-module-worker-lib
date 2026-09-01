@@ -17,6 +17,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"testing"
@@ -26,10 +27,12 @@ import (
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
+	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/tracing"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 func TestMiddleware(t *testing.T) {
-	handler := &HandlerMock{DoFunc: func(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
+	handler := &HandlerMock{DoFunc: func(ctx context.Context, task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
 		return []model.Module{{
 				SmartServiceModuleInit: model.SmartServiceModuleInit{
 					ModuleData: map[string]interface{}{"result": task.Variables},
@@ -60,7 +63,7 @@ func TestMiddleware(t *testing.T) {
 	middleware := New(configuration.Config{}, handler, repo, AuthMock, testIotClient)
 
 	t.Run("check placeholder substitution", func(t *testing.T) {
-		_, outputs, err := middleware.Do(model.CamundaExternalTask{
+		_, outputs, err := middleware.Do(context.Background(), model.CamundaExternalTask{
 			Variables: map[string]model.CamundaVariable{
 				"templ": {Value: "{{.brl}}placeholder{{.brr}}"},
 				"str":   {Value: "{{.v1}}"},
@@ -148,7 +151,7 @@ func TestMiddleware(t *testing.T) {
 		}
 
 		t.Run("ok, no error check", func(t *testing.T) {
-			_, outputs, err := middleware.Do(model.CamundaExternalTask{
+			_, outputs, err := middleware.Do(context.Background(), model.CamundaExternalTask{
 				ProcessInstanceId: "test-instance",
 				Variables: map[string]model.CamundaVariable{
 					PreScriptPrefix + "_1": {
@@ -171,7 +174,7 @@ func TestMiddleware(t *testing.T) {
 		})
 
 		t.Run("unknown device, no error check", func(t *testing.T) {
-			_, _, err = middleware.Do(model.CamundaExternalTask{
+			_, _, err = middleware.Do(context.Background(), model.CamundaExternalTask{
 				Variables: map[string]model.CamundaVariable{
 					PreScriptPrefix + "_1": {
 						Value: `var result_as_Device = deviceRepo.readDevice("unknown");`,
@@ -186,7 +189,7 @@ func TestMiddleware(t *testing.T) {
 		})
 
 		t.Run("null device-id, no error check", func(t *testing.T) {
-			_, _, err = middleware.Do(model.CamundaExternalTask{
+			_, _, err = middleware.Do(context.Background(), model.CamundaExternalTask{
 				Variables: map[string]model.CamundaVariable{
 					PreScriptPrefix + "_1": {
 						Value: `var result_as_Device = deviceRepo.readDevice(null);`,
@@ -201,7 +204,7 @@ func TestMiddleware(t *testing.T) {
 		})
 
 		t.Run("null ref, no error check", func(t *testing.T) {
-			_, _, err = middleware.Do(model.CamundaExternalTask{
+			_, _, err = middleware.Do(context.Background(), model.CamundaExternalTask{
 				Variables: map[string]model.CamundaVariable{
 					PreScriptPrefix + "_1": {
 						Value: `
@@ -218,7 +221,7 @@ func TestMiddleware(t *testing.T) {
 		})
 
 		t.Run("unknown device, try-catch", func(t *testing.T) {
-			_, outputs, err := middleware.Do(model.CamundaExternalTask{
+			_, outputs, err := middleware.Do(context.Background(), model.CamundaExternalTask{
 				Variables: map[string]model.CamundaVariable{
 					PreScriptPrefix + "_1": {
 						Value: `
@@ -246,7 +249,7 @@ func TestMiddleware(t *testing.T) {
 }
 
 func TestMiddlewareScripts(t *testing.T) {
-	handler := &HandlerMock{DoFunc: func(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
+	handler := &HandlerMock{DoFunc: func(ctx context.Context, task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
 		return []model.Module{}, map[string]interface{}{
 			"bar":         "batz",
 			"overwriting": 2,
@@ -291,7 +294,7 @@ func TestMiddlewareScripts(t *testing.T) {
 
 	middleware := New(configuration.Config{}, handler, repo, auth.New(configuration.Config{}), testIotClient)
 
-	_, outputs, err := middleware.Do(model.CamundaExternalTask{
+	_, outputs, err := middleware.Do(context.Background(), model.CamundaExternalTask{
 		Variables: map[string]model.CamundaVariable{
 			"inp1": {Value: "42"},
 			"inp2": {Value: 43},
@@ -337,36 +340,110 @@ func TestMiddlewareScripts(t *testing.T) {
 	}
 }
 
-type HandlerMock struct {
-	DoFunc func(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error)
+// TestMiddlewareAddsInstanceIdToBaggage is the point of the tracing in this middleware:
+// the smart-service-instance-id has to be in the baggage of the context that the worker handler
+// and the following repository calls get, otherwise it neither reaches the sub-services nor the logs.
+func TestMiddlewareAddsInstanceIdToBaggage(t *testing.T) {
+	handlerCtx := context.Context(nil)
+	handler := &HandlerMock{DoFunc: func(ctx context.Context, task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
+		handlerCtx = ctx
+		return nil, map[string]interface{}{}, nil
+	}}
+	repo := &VariablesRepoMock{
+		InstanceFunc: func(processInstanceId string) (result model.SmartServiceInstance, err error) {
+			if processInstanceId != "test-process-instance-id" {
+				t.Error(processInstanceId)
+			}
+			return model.SmartServiceInstance{Id: "test-instance-id", UserId: "test-user-id"}, nil
+		},
+		GetVariablesFunc: func(processId string) (result map[string]interface{}, err error) {
+			return map[string]interface{}{}, nil
+		},
+	}
+
+	testIotClient, _, err := client.NewTestClient()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	middleware := New(configuration.Config{}, handler, repo, AuthMock, testIotClient)
+
+	_, _, err = middleware.Do(context.Background(), model.CamundaExternalTask{
+		ProcessInstanceId: "test-process-instance-id",
+		Variables: map[string]model.CamundaVariable{
+			//a variable change, so that SetVariables is called
+			PostScriptPrefix: {Value: `variables.write("added", "foo");`},
+		},
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if handlerCtx == nil {
+		t.Error("worker handler was not called")
+		return
+	}
+	if value := baggage.FromContext(handlerCtx).Member(tracing.BaggageKeyInstanceId).Value(); value != "test-instance-id" {
+		t.Errorf("handler context: %#v", value)
+	}
+	if repo.GetVariablesCtx == nil {
+		t.Error("GetVariables was not called")
+		return
+	}
+	if value := baggage.FromContext(repo.GetVariablesCtx).Member(tracing.BaggageKeyInstanceId).Value(); value != "test-instance-id" {
+		t.Errorf("GetVariables context: %#v", value)
+	}
+	if repo.SetVariablesCtx == nil {
+		t.Error("SetVariables was not called")
+		return
+	}
+	if value := baggage.FromContext(repo.SetVariablesCtx).Member(tracing.BaggageKeyInstanceId).Value(); value != "test-instance-id" {
+		t.Errorf("SetVariables context: %#v", value)
+	}
 }
 
-func (this *HandlerMock) Do(task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
+type HandlerMock struct {
+	DoFunc func(ctx context.Context, task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error)
+}
+
+func (this *HandlerMock) Do(ctx context.Context, task model.CamundaExternalTask) (modules []model.Module, outputs map[string]interface{}, err error) {
 	if this.DoFunc == nil {
 		return modules, outputs, errors.New("missing mock DoFunc")
 	}
-	return this.DoFunc(task)
+	return this.DoFunc(ctx, task)
 }
 
-func (this *HandlerMock) Undo(modules []model.Module, reason error) {}
+func (this *HandlerMock) Undo(ctx context.Context, modules []model.Module, reason error) {}
 
 type VariablesRepoMock struct {
 	GetVariablesFunc func(processId string) (result map[string]interface{}, err error)
 	SetVariablesFunc func(processId string, changes map[string]interface{}) (err error)
+	InstanceFunc     func(processInstanceId string) (result model.SmartServiceInstance, err error)
+
+	//the contexts the repo was called with, to check the tracing baggage in the tests
+	GetVariablesCtx context.Context
+	SetVariablesCtx context.Context
 }
 
-func (this *VariablesRepoMock) GetInstanceUser(instanceId string) (userId string, err error) {
-	return "user-id", nil
+func (this *VariablesRepoMock) GetCachedSmartServiceInstance(ctx context.Context, processInstanceId string) (result model.SmartServiceInstance, err error) {
+	if this.InstanceFunc != nil {
+		return this.InstanceFunc(processInstanceId)
+	}
+	return model.SmartServiceInstance{Id: "instance-id", UserId: "user-id"}, nil
 }
 
-func (this *VariablesRepoMock) SetVariables(processId string, changes map[string]interface{}) error {
+func (this *VariablesRepoMock) SetVariables(ctx context.Context, processId string, changes map[string]interface{}) error {
+	this.SetVariablesCtx = ctx
 	if this.SetVariablesFunc != nil {
 		return this.SetVariablesFunc(processId, changes)
 	}
 	return nil
 }
 
-func (this *VariablesRepoMock) GetVariables(processId string) (result map[string]interface{}, err error) {
+func (this *VariablesRepoMock) GetVariables(ctx context.Context, processId string) (result map[string]interface{}, err error) {
+	this.GetVariablesCtx = ctx
 	if this.GetVariablesFunc == nil {
 		return result, errors.New("missing mock GetVariablesFunc")
 	}

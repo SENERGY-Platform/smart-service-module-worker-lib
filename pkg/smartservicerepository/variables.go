@@ -18,16 +18,23 @@ package smartservicerepository
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"runtime/debug"
+
+	"github.com/SENERGY-Platform/gin-middleware/otelx"
 )
 
-func (this *SmartServiceRepository) GetVariables(processId string) (result map[string]interface{}, err error) {
+func (this *SmartServiceRepository) GetVariables(ctx context.Context, processId string) (result map[string]interface{}, err error) {
 	req, err := http.NewRequest("GET", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processId)+"/variables-map", nil)
+	if err != nil {
+		return result, err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return result, err
 	}
@@ -54,14 +61,18 @@ func (this *SmartServiceRepository) GetVariables(processId string) (result map[s
 	return result, nil
 }
 
-func (this *SmartServiceRepository) SetVariables(processId string, variableChanges map[string]interface{}) (err error) {
+func (this *SmartServiceRepository) SetVariables(ctx context.Context, processId string, variableChanges map[string]interface{}) (err error) {
 	body := new(bytes.Buffer)
 	err = json.NewEncoder(body).Encode(variableChanges)
 	if err != nil {
-		this.config.GetLogger().Error("error in SmartServiceRepository.SetVariables", "error", err, "stack", string(debug.Stack()))
+		this.config.GetLogger().ErrorContext(ctx, "error in SmartServiceRepository.SetVariables", "error", err, "stack", string(debug.Stack()))
 		return err
 	}
 	req, err := http.NewRequest("PUT", this.config.SmartServiceRepositoryUrl+"/instances-by-process-id/"+url.PathEscape(processId)+"/variables-map", body)
+	if err != nil {
+		return err
+	}
+	err = otelx.InjectContextToRequest(ctx, req)
 	if err != nil {
 		return err
 	}

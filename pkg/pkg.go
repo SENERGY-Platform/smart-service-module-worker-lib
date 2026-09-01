@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/SENERGY-Platform/device-repository/lib/client"
+	"github.com/SENERGY-Platform/gin-middleware/otelx"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/camunda"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/configuration"
@@ -31,6 +32,13 @@ import (
 type HandlerFactory = func(auth *auth.Auth, smartServiceRepo *smartservicerepository.SmartServiceRepository) (camunda.Handler, error)
 
 func Start(ctx context.Context, wg *sync.WaitGroup, config configuration.Config, handlerfactory HandlerFactory) error {
+	//this worker has no gin server; the returned handler is unused, the call is done for the
+	//initialisation of open-telemetry, which is sync.Once guarded inside the library.
+	//tracing must never keep the worker from doing its work, so an error is only logged.
+	_, err := otelx.GinOpenTelemetry(ctx, configuration.ServiceName(), config.OtelEndpoint)
+	if err != nil {
+		config.GetLogger().ErrorContext(ctx, "unable to init open-telemetry -> continue without tracing", "error", err)
+	}
 	auth := auth.New(config)
 	smartServiceRepo := smartservicerepository.New(config, auth)
 	handler, err := handlerfactory(auth, smartServiceRepo)
