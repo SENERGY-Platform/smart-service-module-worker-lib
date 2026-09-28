@@ -17,6 +17,28 @@ this repository provides a code generator, that creates an ace completer by call
 go generate ./...
 ```
 
+## aspects in a filter criteria
+
+A filter criteria a script hands to `deviceRepo.getDeviceTypeSelectables`,
+`deviceRepo.listDeviceTypes` or `util.getDevicesWithServiceFromIotOption` names its aspects
+in `aspect_ids`:
+
+```js
+deviceRepo.getDeviceTypeSelectables([{function_id: fid, aspect_ids: [a1, a2]}], "", true, true);
+```
+
+Several aspects in **one** criteria are an AND on a single content variable: the same variable
+has to carry all of them. That is a different AND from the one over the criteria list, where
+each entry may be answered by a different variable of the device type.
+
+`aspect_id` is deprecated and kept as the alias for a list with one element, so a script
+written before the lists keeps its results. Both spellings are passed to device-repository as
+the script wrote them; it resolves the alias at its own boundary, and folding here would
+change what a device-repository predating the lists is asked for.
+
+The answering side matches: a path option names every aspect it matched in `aspect_nodes` and
+keeps the alphabetically first of them in the deprecated `aspect_node`.
+
 # Use Example
 
 ```
