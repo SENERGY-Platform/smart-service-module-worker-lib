@@ -18,7 +18,7 @@ package jsdoc
 
 import (
 	"fmt"
-	"github.com/SENERGY-Platform/device-repository/lib/model"
+	"github.com/SENERGY-Platform/device-repository/v2/lib/model"
 	"github.com/SENERGY-Platform/models/go/models"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/middleware/gen/util"
 	model2 "github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"

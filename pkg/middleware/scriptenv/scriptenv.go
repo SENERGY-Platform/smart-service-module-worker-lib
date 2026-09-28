@@ -19,7 +19,7 @@ package scriptenv
 import (
 	"context"
 
-	"github.com/SENERGY-Platform/device-repository/lib/client"
+	"github.com/SENERGY-Platform/device-repository/v2/lib/client"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
 	"github.com/dop251/goja"
 	"strings"

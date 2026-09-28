@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	devicemodel "github.com/SENERGY-Platform/device-repository/lib/model"
+	devicemodel "github.com/SENERGY-Platform/device-repository/v2/lib/model"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/model"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/util"
 )

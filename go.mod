@@ -3,11 +3,11 @@ module github.com/SENERGY-Platform/smart-service-module-worker-lib
 go 1.26
 
 require (
-	github.com/SENERGY-Platform/device-repository v0.3.5
+	github.com/SENERGY-Platform/device-repository/v2 v2.2.2
 	github.com/SENERGY-Platform/gin-middleware v0.14.1
 	github.com/SENERGY-Platform/go-service-base/struct-logger v0.8.0
-	github.com/SENERGY-Platform/models/go v0.0.0-20260710115411-5b8e00d6e038
-	github.com/SENERGY-Platform/service-commons v0.0.0-20260821114734-3e4578ac2358
+	github.com/SENERGY-Platform/models/go v0.0.0-20260911075423-f01521c01da2
+	github.com/SENERGY-Platform/service-commons v0.0.0-20260915085610-4949c31a01ef
 	github.com/dop251/goja v0.0.0-20240627195025-eb1f15ee67d2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -19,7 +19,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.6 // indirect
 	github.com/SENERGY-Platform/mgw-cloud-proxy/cert-manager/lib v0.0.4 // indirect
-	github.com/SENERGY-Platform/permissions-v2 v0.0.47 // indirect
+	github.com/SENERGY-Platform/permissions-v2 v1.0.0 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.1 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
@@ -102,4 +102,4 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 )
 
-//replace github.com/SENERGY-Platform/device-repository => ../device-repository
+//replace github.com/SENERGY-Platform/device-repository/v2 => ../device-repository

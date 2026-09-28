@@ -34,6 +34,7 @@ func TestGetTypeDefUsesJsonTagNames(t *testing.T) {
 	expected := []TypeDefField{
 		{Name: "id", Type: "string"},
 		{Name: "name", Type: "string"},
+		{Name: "aspect_class_id", Type: "string"},
 		{Name: "sub_aspects", Type: "Aspect[]"},
 	}
 	if !reflect.DeepEqual(defs[0].Fields, expected) {

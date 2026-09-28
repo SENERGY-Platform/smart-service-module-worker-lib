@@ -519,6 +519,7 @@ throws exception if variable is unknown
  * @typedef {Object} Aspect
  * @property { string } id
  * @property { string } name
+ * @property { string } aspect_class_id
  * @property { Aspect[] } sub_aspects
  */
 
@@ -526,6 +527,7 @@ throws exception if variable is unknown
  * @typedef {Object} AspectNode
  * @property { string } id
  * @property { string } name
+ * @property { string } aspect_class_id
  * @property { string } root_id
  * @property { string } parent_id
  * @property { string[] } child_ids
@@ -576,6 +578,7 @@ throws exception if variable is unknown
  * @property { string } path
  * @property { string } characteristic_id
  * @property { AspectNode } aspect_node
+ * @property { AspectNode[] } aspect_nodes
  * @property { string } function_id
  * @property { Object|null } value
  * @property { string } type
@@ -603,6 +606,7 @@ throws exception if variable is unknown
  * @property { string } unit_reference
  * @property { string } function_id
  * @property { string } aspect_id
+ * @property { string[] } aspect_ids
  */
 
 /**
@@ -648,6 +652,7 @@ throws exception if variable is unknown
  * @property { string } interaction
  * @property { string } function_id
  * @property { string } aspect_id
+ * @property { string[] } aspect_ids
  * @property { string } device_class_id
  */
 
@@ -688,6 +693,7 @@ throws exception if variable is unknown
  * @property { string } function_id
  * @property { string } device_class_id
  * @property { string } aspect_id
+ * @property { string[] } aspect_ids
  */
 
 /**
@@ -717,6 +723,7 @@ throws exception if variable is unknown
  * @property { string[] } device_local_ids
  * @property { string[] } device_ids
  * @property { string } owner_id
+ * @property { Attribute[] } attributes
  */
 
 /**
@@ -771,6 +778,7 @@ throws exception if variable is unknown
  * @property { string } path
  * @property { string } characteristic_id
  * @property { AspectNode } aspect_node
+ * @property { AspectNode[] } aspect_nodes
  * @property { string } function_id
  * @property { boolean } is_void
  * @property { Object|null } value

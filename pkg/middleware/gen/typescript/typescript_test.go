@@ -63,6 +63,7 @@ func TestInterfacePropertiesUseRuntimeNames(t *testing.T) {
 	expected := []Property{
 		{Name: "id", Type: "string"},
 		{Name: "name", Type: "string"},
+		{Name: "aspect_class_id", Type: "string"},
 		{Name: "sub_aspects", Type: "Aspect[]"},
 	}
 	if !reflect.DeepEqual(interfaces[i].Properties, expected) {
@@ -130,7 +131,7 @@ func TestGenerateTypescriptDeclarations(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, expected := range []string{
-		"interface Aspect {\n    id: string;\n    name: string;\n    sub_aspects: Aspect[];\n}",
+		"interface Aspect {\n    id: string;\n    name: string;\n    aspect_class_id: string;\n    sub_aspects: Aspect[];\n}",
 		"declare const deviceRepo: {",
 		"    getAspect(id: string): Aspect;",
 		"    setJson(name: string, value: any): void;",
