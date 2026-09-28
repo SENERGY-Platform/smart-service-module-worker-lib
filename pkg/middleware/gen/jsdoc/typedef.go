@@ -36,6 +36,11 @@ var fieldNameMapper = goja.TagFieldNameMapper("json", true)
 type TypeDefField struct {
 	Name string
 	Type string
+
+	//Deprecated and DeprecationNote repeat what the go source says about the field;
+	//see deprecationOf(). The note may be empty even for a deprecated field.
+	Deprecated      bool
+	DeprecationNote string
 }
 
 type TypeDef struct {
@@ -120,9 +125,12 @@ func getTypeDef(t reflect.Type, done []string) (result []TypeDef) {
 		if slices.ContainsFunc(this.Fields, func(f TypeDefField) bool { return f.Name == name }) {
 			continue //shadowed by a field of the same name closer to the surface
 		}
+		note, isDeprecated := deprecationOf(declaringStruct(t, field), field.Name)
 		this.Fields = append(this.Fields, TypeDefField{
-			Name: name,
-			Type: getTypeName(field.Type),
+			Name:            name,
+			Type:            getTypeName(field.Type),
+			Deprecated:      isDeprecated,
+			DeprecationNote: note,
 		})
 		subStruct := getDeepStruct(field.Type)
 		if subStruct != nil {

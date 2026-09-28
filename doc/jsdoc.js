@@ -577,7 +577,7 @@ throws exception if variable is unknown
  * @typedef {Object} Configurable
  * @property { string } path
  * @property { string } characteristic_id
- * @property { AspectNode } aspect_node
+ * @property { AspectNode } aspect_node deprecated: alias for a single element AspectNodes; holds the node with the alphabetically first id
  * @property { AspectNode[] } aspect_nodes
  * @property { string } function_id
  * @property { Object|null } value
@@ -605,7 +605,7 @@ throws exception if variable is unknown
  * @property { string[] } serialization_options
  * @property { string } unit_reference
  * @property { string } function_id
- * @property { string } aspect_id
+ * @property { string } aspect_id deprecated: please use AspectIds
  * @property { string[] } aspect_ids
  */
 
@@ -651,7 +651,7 @@ throws exception if variable is unknown
  * @typedef {Object} DeviceGroupFilterCriteria
  * @property { string } interaction
  * @property { string } function_id
- * @property { string } aspect_id
+ * @property { string } aspect_id deprecated: please use AspectIds
  * @property { string[] } aspect_ids
  * @property { string } device_class_id
  */
@@ -692,7 +692,7 @@ throws exception if variable is unknown
  * @property { string } interaction
  * @property { string } function_id
  * @property { string } device_class_id
- * @property { string } aspect_id
+ * @property { string } aspect_id deprecated: alias for a single element AspectIds; normalized into AspectIds at the controller boundary
  * @property { string[] } aspect_ids
  */
 
@@ -777,7 +777,7 @@ throws exception if variable is unknown
  * @property { string } service_id
  * @property { string } path
  * @property { string } characteristic_id
- * @property { AspectNode } aspect_node
+ * @property { AspectNode } aspect_node deprecated: alias for a single element AspectNodes; holds the node with the alphabetically first id
  * @property { AspectNode[] } aspect_nodes
  * @property { string } function_id
  * @property { boolean } is_void

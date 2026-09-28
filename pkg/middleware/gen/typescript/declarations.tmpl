@@ -23,7 +23,8 @@
 */
 {{range $interface := .interfaces}}
 interface {{$interface.Name}} {
-{{range $property := $interface.Properties}}    {{$property.Name}}: {{$property.Type}};
+{{range $property := $interface.Properties}}{{if $property.Deprecated}}    /** @deprecated{{if $property.DeprecationNote}} {{$property.DeprecationNote}}{{end}} */
+{{end}}    {{$property.Name}}: {{$property.Type}};
 {{end}}}
 {{end}}{{range $namespace := .namespaces}}
 declare const {{$namespace.Name}}: {

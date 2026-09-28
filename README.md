@@ -39,6 +39,20 @@ change what a device-repository predating the lists is asked for.
 The answering side matches: a path option names every aspect it matched in `aspect_nodes` and
 keeps the alphabetically first of them in the deprecated `aspect_node`.
 
+The generated documentation in `doc/` marks such a field with `@deprecated` and repeats the
+note it carries. The generator reads that from a comment on the field in the go source of the
+declaring model - a comment line opening with the word `deprecated`, with or without a note
+behind it - so the marking lives where it is decided: a field the models deprecate next is
+documented as deprecated without a change here, and one that is removed loses its marking on
+its own. Why the comment rather than the field names or a list kept here, with both rejected
+alternatives, is in [docs/deprecation-is-read-from-the-go-comment.md](docs/deprecation-is-read-from-the-go-comment.md).
+
+# Documentation
+
+`doc/` holds the generated script API - the ace completer, the jsdoc and the typescript
+declarations. `docs/` holds hand-written notes on decisions of this library that are not
+obvious from the code.
+
 # Use Example
 
 ```

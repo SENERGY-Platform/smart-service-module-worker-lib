@@ -36,6 +36,11 @@ type Interface struct {
 type Property struct {
 	Name string
 	Type string
+
+	//Deprecated and DeprecationNote are carried over from the typedef, which reads them
+	//from the go source of the underlying struct
+	Deprecated      bool
+	DeprecationNote string
 }
 
 type Namespace struct {
@@ -70,8 +75,10 @@ func GetInterfaces() (result []Interface) {
 		element := Interface{Name: def.Name}
 		for _, field := range def.Fields {
 			element.Properties = append(element.Properties, Property{
-				Name: field.Name,
-				Type: ToTsType(field.Type),
+				Name:            field.Name,
+				Type:            ToTsType(field.Type),
+				Deprecated:      field.Deprecated,
+				DeprecationNote: field.DeprecationNote,
 			})
 		}
 		result = append(result, element)

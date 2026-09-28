@@ -1,6 +1,6 @@
 {{range $element := .}}
 /**
  * @typedef {Object} {{$element.Name}}
-{{range $field := $element.Fields}} * @property { {{$field.Type}} } {{$field.Name}}
+{{range $field := $element.Fields}} * @property { {{$field.Type}} } {{$field.Name}}{{if $field.Deprecated}} deprecated{{if $field.DeprecationNote}}: {{$field.DeprecationNote}}{{end}}{{end}}
 {{end}} */
 {{end}}
