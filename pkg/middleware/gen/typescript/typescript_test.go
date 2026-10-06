@@ -135,6 +135,11 @@ func TestGenerateTypescriptDeclarations(t *testing.T) {
 		"declare const deviceRepo: {",
 		"    getAspect(id: string): Aspect;",
 		"    setJson(name: string, value: any): void;",
+		//a go variadic parameter becomes a typescript rest parameter
+		"    log(...args: any[]): void;",
+		//lib.dom declares "declare var console: Console;", a "declare const console" would collide with it
+		"interface Console {",
+		"declare var console: Console;",
 	} {
 		if !strings.Contains(result, expected) {
 			t.Errorf("missing %#v in:\n%v", expected, result)

@@ -21,6 +21,10 @@
 
  
  /**
+  * @namespace console
+  */
+ 
+ /**
   * @namespace deviceRepo
   */
  
@@ -41,6 +45,21 @@
   */
  
 
+
+/** 
+ * Dump writes all smart-service instance variables, the variables changed by this script, process worker inputs and process worker outputs known at the time of the call to the worker log
+ * @function console#dump
+ * @example
+ * console.dump()
+ */
+
+/** 
+ * Log writes the arguments, separated by spaces, as info message to the worker log; strings are written as they are, everything else as json
+ * @function console#log
+ * @param { ...Object } args
+ * @example
+ * console.log(args_as_any)
+ */
 
 /** 
  * @function deviceRepo#getAspect

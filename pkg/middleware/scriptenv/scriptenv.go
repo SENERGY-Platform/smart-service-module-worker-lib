@@ -18,6 +18,7 @@ package scriptenv
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/SENERGY-Platform/device-repository/v2/lib/client"
 	"github.com/SENERGY-Platform/smart-service-module-worker-lib/pkg/auth"
@@ -26,9 +27,11 @@ import (
 	"sync"
 )
 
-func NewScriptEnv(auth Auth, iotClient client.Interface, userId string, variables map[string]interface{}, inputs map[string]interface{}, outputs map[string]interface{}) *ScriptEnv {
+func NewScriptEnv(ctx context.Context, logger *slog.Logger, auth Auth, iotClient client.Interface, userId string, variables map[string]interface{}, inputs map[string]interface{}, outputs map[string]interface{}) *ScriptEnv {
 	result := &ScriptEnv{
 		vm:               nil,
+		ctx:              ctx,
+		logger:           logger,
 		Variables:        variables,
 		VariablesUpdates: map[string]interface{}{},
 		Inputs:           RemoveScriptInputs(inputs),
@@ -40,11 +43,19 @@ func NewScriptEnv(auth Auth, iotClient client.Interface, userId string, variable
 	if result.Outputs == nil {
 		result.Outputs = map[string]interface{}{}
 	}
+	if result.ctx == nil {
+		result.ctx = context.Background()
+	}
+	if result.logger == nil {
+		result.logger = slog.Default()
+	}
 	return result
 }
 
 type ScriptEnv struct {
 	vm               *goja.Runtime
+	ctx              context.Context
+	logger           *slog.Logger
 	Variables        map[string]interface{}
 	VariablesUpdates map[string]interface{}
 	Inputs           map[string]interface{}
@@ -98,6 +109,7 @@ func (this *ScriptEnv) GetEnvironment() map[string]interface{} {
 		"outputs":    NewOutputsScriptEnv(this),
 		"deviceRepo": NewDeviceRepoScriptEnv(this),
 		"util":       NewScriptEnvUtil(this),
+		"console":    NewConsoleScriptEnv(this),
 	}
 }
 

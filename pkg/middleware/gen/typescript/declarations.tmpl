@@ -27,10 +27,12 @@ interface {{$interface.Name}} {
 {{end}}    {{$property.Name}}: {{$property.Type}};
 {{end}}}
 {{end}}{{range $namespace := .namespaces}}
-declare const {{$namespace.Name}}: {
+{{if $namespace.Interface}}interface {{$namespace.Interface}} {{"{"}}{{else}}declare const {{$namespace.Name}}: {{"{"}}{{end}}
 {{range $method := $namespace.Methods}}{{if $method.Comment}}    /**
 {{range $line := $method.Comment}}     * {{$line}}
 {{end}}     */
 {{end}}    {{$method.Name}}({{$method.Params}}): {{$method.Result}};
-{{end}}};
-{{end}}
+{{end}}{{if $namespace.Interface}}}
+declare var {{$namespace.Name}}: {{$namespace.Interface}};
+{{else}}};
+{{end}}{{end}}

@@ -46,6 +46,15 @@ type Property struct {
 type Namespace struct {
 	Name    string
 	Methods []Method
+	//Interface is set if the standard library of typescript already declares the namespace as global
+	//(e.g. lib.dom: "declare var console: Console;"). a "declare const" would then fail with
+	//"Cannot redeclare block-scoped variable", so the methods extend the existing interface instead.
+	Interface string
+}
+
+// builtinGlobals maps script-env namespaces to the interface the typescript standard library declares them with
+var builtinGlobals = map[string]string{
+	"console": "Console",
 }
 
 type Method struct {
@@ -92,7 +101,7 @@ func GetNamespaces(pathToScriptenv string) (result []Namespace) {
 	for _, info := range util.GetScriptEnvMethodTemplateInfos(pathToScriptenv) {
 		i := slices.IndexFunc(result, func(n Namespace) bool { return n.Name == info.Prefix })
 		if i < 0 {
-			result = append(result, Namespace{Name: info.Prefix})
+			result = append(result, Namespace{Name: info.Prefix, Interface: builtinGlobals[info.Prefix]})
 			i = len(result) - 1
 		}
 		result[i].Methods = append(result[i].Methods, getMethod(info))
@@ -108,6 +117,10 @@ func getMethod(info util.Info) (result Method) {
 	}
 	params := []string{}
 	for _, param := range info.Inputs {
+		if element, isRest := strings.CutPrefix(param.Type, "..."); isRest {
+			params = append(params, "..."+param.Name+": "+ToTsType(element)+"[]")
+			continue
+		}
 		params = append(params, param.Name+": "+ToTsType(param.Type))
 	}
 	result.Params = strings.Join(params, ", ")

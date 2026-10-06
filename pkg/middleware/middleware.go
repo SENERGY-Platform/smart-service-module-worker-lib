@@ -90,7 +90,7 @@ func (this *Middleware) Do(ctx context.Context, task model.CamundaExternalTask) 
 	for key, value := range task.Variables {
 		inputs[key] = value.Value
 	}
-	variableChanges, outputs, err := this.RunPreScripts(userId, inputs, variables)
+	variableChanges, outputs, err := this.RunPreScripts(ctx, userId, inputs, variables)
 	if err != nil {
 		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, outputs, err
@@ -111,7 +111,7 @@ func (this *Middleware) Do(ctx context.Context, task model.CamundaExternalTask) 
 	for key, value := range handlerOutputs {
 		outputs[key] = value
 	}
-	postVarChanges, postOutputs, err := this.RunPostScripts(userId, inputs, outputs, variables)
+	postVarChanges, postOutputs, err := this.RunPostScripts(ctx, userId, inputs, outputs, variables)
 	if err != nil {
 		this.config.GetLogger().ErrorContext(ctx, "error in Middleware.Do", "error", err, "stack", string(debug.Stack()))
 		return modules, handlerOutputs, err
@@ -139,12 +139,12 @@ func (this *Middleware) Undo(ctx context.Context, modules []model.Module, reason
 const PreScriptPrefix = "prescript"
 const PostScriptPrefix = "postscript"
 
-func (this *Middleware) RunPreScripts(userId string, inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts(userId, PreScriptPrefix, inputs, nil, variables)
+func (this *Middleware) RunPreScripts(ctx context.Context, userId string, inputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+	return this.RunScripts(ctx, userId, PreScriptPrefix, inputs, nil, variables)
 }
 
-func (this *Middleware) RunPostScripts(userId string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
-	return this.RunScripts(userId, PostScriptPrefix, inputs, existingOutputs, variables)
+func (this *Middleware) RunPostScripts(ctx context.Context, userId string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+	return this.RunScripts(ctx, userId, PostScriptPrefix, inputs, existingOutputs, variables)
 }
 
 type KeyValue struct {
@@ -152,7 +152,7 @@ type KeyValue struct {
 	Value string
 }
 
-func (this *Middleware) RunScripts(userId string, prefix string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
+func (this *Middleware) RunScripts(ctx context.Context, userId string, prefix string, inputs map[string]interface{}, existingOutputs map[string]interface{}, variables map[string]interface{}) (variableChanges map[string]interface{}, outputs map[string]interface{}, err error) {
 	scriptsKv := []KeyValue{}
 	for name, value := range inputs {
 		if str, ok := value.(string); ok && strings.HasPrefix(name, prefix) {
@@ -171,7 +171,8 @@ func (this *Middleware) RunScripts(userId string, prefix string, inputs map[stri
 		scripts = append(scripts, script.Value)
 	}
 	script := strings.Join(scripts, "")
-	scriptEnv := scriptenv.NewScriptEnv(this.auth, this.iotClient, userId, variables, inputs, existingOutputs)
+	logger := this.config.GetLogger().With("script", prefix)
+	scriptEnv := scriptenv.NewScriptEnv(ctx, logger, this.auth, this.iotClient, userId, variables, inputs, existingOutputs)
 	err = runScript(script, scriptEnv)
 	if err != nil {
 		return variableChanges, outputs, err

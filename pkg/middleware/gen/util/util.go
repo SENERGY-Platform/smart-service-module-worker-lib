@@ -155,6 +155,8 @@ func getInputAsTypeName(param ast.Expr) string {
 		return getInputAsTypeName(t.Value) + "_map"
 	case *ast.ArrayType:
 		return getInputAsTypeName(t.Elt) + "_list"
+	case *ast.Ellipsis:
+		return getInputAsTypeName(t.Elt)
 	}
 	return ""
 }
@@ -175,6 +177,9 @@ func getInputAsJsDocType(param ast.Expr) string {
 		return "Map<string," + getInputAsJsDocType(t.Value) + ">"
 	case *ast.ArrayType:
 		return getInputAsJsDocType(t.Elt) + "[]"
+	case *ast.Ellipsis:
+		//jsdoc notation of a rest parameter: any number of arguments of the element type
+		return "..." + getInputAsJsDocType(t.Elt)
 	}
 	return ""
 }
